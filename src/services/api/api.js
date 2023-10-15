@@ -27,9 +27,7 @@ const getAuthToken = async () => {
       data
     );
     const accessToken = response.data.access_token;
-    console.log(
-      "\tAAD Access Token acquired: " + accessToken.substring(0, 50) + "..."
-    );
+
     return accessToken;
   } catch (error) {
     console.log("\tError getting token: " + error.message);
@@ -67,4 +65,40 @@ async function postPatient(accessToken, data) {
   }
 }
 
-export { getAuthToken, getPatients, postPatient };
+async function getPractitioners(accessToken) {
+  const baseUrl = fhirEndpoint + "Practitioner";
+
+  try {
+    const response = await axios.get(baseUrl, {
+      headers: getHttpHeader(accessToken),
+    });
+
+    return response?.data;
+  } catch (error) {
+    console.log("\tError getting practitioner data: " + error.response.status);
+  }
+}
+
+async function postPractitioner(accessToken, data) {
+  try {
+    const response = await axios.post(fhirEndpoint + "Practitioner", data, {
+      headers: getHttpHeader(accessToken),
+    });
+    const resourceId = response.data.id;
+    console.log(
+      "\tPractitioner ingested: " + resourceId + ". HTTP " + response.status
+    );
+    return resourceId;
+  } catch (error) {
+    console.log("\tError persisting practitioner: " + error.response.status);
+    return null;
+  }
+}
+
+export {
+  getAuthToken,
+  getPatients,
+  postPatient,
+  getPractitioners,
+  postPractitioner,
+};

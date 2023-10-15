@@ -9,6 +9,7 @@ export const AuthenticationContextProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [user, setUser] = useState(null);
   const [error, setError] = useState(null);
+  const [userType, setUserType] = useState("patient");
 
   firebase.auth().onAuthStateChanged((usr) => {
     if (usr) {
@@ -19,12 +20,13 @@ export const AuthenticationContextProvider = ({ children }) => {
     }
   });
 
-  const onLogin = (email, password) => {
+  const onLogin = (email, password, profile) => {
     setIsLoading(true);
     loginRequest(email, password)
       .then((u) => {
         setUser(u);
         setIsLoading(false);
+        setUserType(profile);
       })
       .catch((e) => {
         setIsLoading(false);
@@ -56,6 +58,7 @@ export const AuthenticationContextProvider = ({ children }) => {
       value={{
         isAuthenticated: !!user,
         user,
+        userType,
         isLoading,
         error,
         onLogin,

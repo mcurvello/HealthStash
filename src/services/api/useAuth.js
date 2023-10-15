@@ -27,13 +27,8 @@ const useAuth = () => {
       );
 
       const newAccessToken = response.data.access_token;
-      console.log(
-        "\tAAD Access Token acquired: " +
-          newAccessToken.substring(0, 50) +
-          "..."
-      );
+
       setAccessToken(newAccessToken);
-      console.log(accessToken);
       return newAccessToken;
     } catch (error) {
       console.log("\tError getting token: " + error.message);

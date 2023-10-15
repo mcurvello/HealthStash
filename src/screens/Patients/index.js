@@ -5,10 +5,11 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
 } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   Button,
   Card,
+  IconButton,
   Modal,
   PaperProvider,
   Portal,
@@ -18,30 +19,18 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { Image } from "react-native";
 import { getAuthToken, getPatients, postPatient } from "../../services/api/api";
+import {
+  formatarDataParaBR,
+  converterDataParaFormatoISO,
+} from "../../utils/date";
+import { AuthenticationContext } from "../../services/authentication/AuthenticationContext";
+import { Map } from "../Map";
+import Prescription from "../Prescription";
 
 const Patients = ({ navigation }) => {
   const [patients, setPatients] = useState();
-
-  function formatarDataParaBR(data) {
-    const dataFormatada = new Date(data);
-    const opcoes = { year: "numeric", month: "2-digit", day: "2-digit" };
-    return dataFormatada.toLocaleDateString("pt-BR", opcoes);
-  }
-
-  function converterDataParaFormatoISO(data) {
-    const partes = data.split("/");
-    if (partes.length === 3) {
-      const dia = partes[0];
-      const mes = partes[1];
-      const ano = partes[2];
-
-      const dataFormatada = `${ano}-${mes}-${dia}`;
-
-      return dataFormatada;
-    } else {
-      return "Data inválida";
-    }
-  }
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const { userType } = useContext(AuthenticationContext);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -69,7 +58,7 @@ const Patients = ({ navigation }) => {
     backgroundColor: "white",
     padding: 20,
     margin: 10,
-    height: 680,
+    height: 700,
   };
 
   const addPatient = async (
@@ -134,68 +123,90 @@ const Patients = ({ navigation }) => {
             onDismiss={hideModal}
             contentContainerStyle={containerStyle}
           >
-            <Title
-              style={{
-                textAlign: "center",
-                marginBottom: 24,
-                fontWeight: "bold",
-                fontSize: 24,
-              }}
-            >
-              Adicionar um paciente
-            </Title>
-            <TextInput
-              value={firstName}
-              onChangeText={(text) => setFirstName(text)}
-              placeholder="Nome"
-              mode="outlined"
-              style={{ marginBottom: 12 }}
-            />
-            <TextInput
-              value={middleName}
-              onChangeText={(text) => setMiddleName(text)}
-              placeholder="Primeiro sobrenome"
-              mode="outlined"
-              style={{ marginBottom: 12 }}
-            />
-            <TextInput
-              value={lastName}
-              onChangeText={(text) => setLastName(text)}
-              placeholder="Último sobrenome"
-              mode="outlined"
-              style={{ marginBottom: 12 }}
-            />
-            <TextInput
-              value={birthdate}
-              onChangeText={(text) => setBirthdate(text)}
-              placeholder="Data de nascimento"
-              mode="outlined"
-              style={{ marginBottom: 12 }}
-            />
-            <TextInput
-              value={gender}
-              onChangeText={(text) => setGender(text)}
-              placeholder="Gênero"
-              mode="outlined"
-              style={{ marginBottom: 12 }}
-            />
-            <TextInput
-              value={address}
-              onChangeText={(text) => setAddredss(text)}
-              placeholder="Endereço"
-              mode="outlined"
-              style={{ marginBottom: 12 }}
-            />
-            <Button
-              mode="elevated"
-              onPress={() =>
-                addPatient(firstName, middleName, lastName, gender, birthdate)
-              }
-              style={styles.addButton}
-              textColor="#004460"
-            >
-              Adicionar
-            </Button>
+            {userType === "clinic" && (
+              <>
+                <Title
+                  style={{
+                    textAlign: "center",
+                    marginBottom: 24,
+                    fontWeight: "bold",
+                    fontSize: 24,
+                  }}
+                >
+                  Adicionar um paciente
+                </Title>
+                <TextInput
+                  value={firstName}
+                  onChangeText={(text) => setFirstName(text)}
+                  placeholder="Nome"
+                  mode="outlined"
+                  style={{ marginBottom: 12 }}
+                />
+                <TextInput
+                  value={middleName}
+                  onChangeText={(text) => setMiddleName(text)}
+                  placeholder="Primeiro sobrenome"
+                  mode="outlined"
+                  style={{ marginBottom: 12 }}
+                />
+                <TextInput
+                  value={lastName}
+                  onChangeText={(text) => setLastName(text)}
+                  placeholder="Último sobrenome"
+                  mode="outlined"
+                  style={{ marginBottom: 12 }}
+                />
+                <TextInput
+                  value={birthdate}
+                  onChangeText={(text) => setBirthdate(text)}
+                  placeholder="Data de nascimento"
+                  mode="outlined"
+                  style={{ marginBottom: 12 }}
+                />
+                <TextInput
+                  value={gender}
+                  onChangeText={(text) => setGender(text)}
+                  placeholder="Gênero"
+                  mode="outlined"
+                  style={{ marginBottom: 12 }}
+                />
+                <TextInput
+                  value={address}
+                  onChangeText={(text) => setAddredss(text)}
+                  placeholder="Endereço"
+                  mode="outlined"
+                  style={{ marginBottom: 12 }}
+                />
+                <Button
+                  mode="elevated"
+                  onPress={() =>
+                    addPatient(
+                      firstName,
+                      middleName,
+                      lastName,
+                      gender,
+                      birthdate
+                    )
+                  }
+                  style={styles.addButton}
+                  textColor="#004460"
+                >
+                  Adicionar
+                </Button>
+              </>
+            )}
+            {userType === "practitioner" && (
+              <>
+                <IconButton
+                  icon="close"
+                  iconColor="black"
+                  size={20}
+                  onPress={() => hideModal()}
+                  style={{ position: "absolute", top: 0, right: 0 }}
+                />
+                <Prescription patient={selectedPatient} />
+              </>
+            )}
           </Modal>
         </Portal>
         <View style={styles.container}>
@@ -215,7 +226,14 @@ const Patients = ({ navigation }) => {
 
             {patients &&
               patients.entry.slice(4).map((patient, index) => (
-                <Card key={index} style={styles.card}>
+                <Card
+                  key={index}
+                  style={styles.card}
+                  onPress={() => {
+                    setSelectedPatient(patient);
+                    showModal();
+                  }}
+                >
                   <Card.Content>
                     <Text style={styles.patientName}>
                       {patient.resource.name[0].given.join(" ")}{" "}
@@ -236,14 +254,16 @@ const Patients = ({ navigation }) => {
               ))}
           </ScrollView>
 
-          <Button
-            mode="contained"
-            onPress={showModal}
-            style={styles.addButton}
-            textColor="#004460"
-          >
-            Adicionar Paciente
-          </Button>
+          {userType === "clinic" && (
+            <Button
+              mode="contained"
+              onPress={showModal}
+              style={styles.addButton}
+              textColor="#004460"
+            >
+              Adicionar Paciente
+            </Button>
+          )}
         </View>
       </PaperProvider>
     </KeyboardAvoidingView>

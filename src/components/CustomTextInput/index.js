@@ -9,23 +9,32 @@ function CustomTextInput({
   onPress,
   secureTextEntry,
   width,
+  color,
 }) {
   return (
     <TextInput
       placeholder={placeholder}
-      placeholderTextColor="#fff"
+      placeholderTextColor={color || "#fff"}
       mode="outlined"
       value={value}
-      left={<TextInput.Icon iconColor="#fff" icon={icon} onPress={onPress} />}
+      left={
+        icon && (
+          <TextInput.Icon
+            iconColor={color || "#fff"}
+            icon={icon}
+            onPress={onPress}
+          />
+        )
+      }
       style={{
         width: width || 370,
         backgroundColor: "transparent",
         marginBottom: 8,
       }}
-      textColor="#fff"
+      textColor={color || "#fff"}
       outlineStyle={{
         borderRadius: 50,
-        borderColor: "#fff",
+        borderColor: color || "#fff",
         borderWidth: 0.5,
       }}
       onChangeText={onChangeText}
