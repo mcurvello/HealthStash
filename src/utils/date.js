@@ -4,6 +4,17 @@ function formatarDataParaBR(data) {
   return dataFormatada.toLocaleDateString("pt-BR", opcoes);
 }
 
+function formatarDataHoraParaBR(data) {
+  const dataFormatada = new Date(data);
+  const dia = String(dataFormatada.getDate()).padStart(2, "0");
+  const mes = String(dataFormatada.getMonth() + 1).padStart(2, "0");
+  const ano = dataFormatada.getFullYear();
+  const hora = String(dataFormatada.getHours()).padStart(2, "0");
+  const minutos = String(dataFormatada.getMinutes()).padStart(2, "0");
+
+  return `${dia}/${mes}/${ano} - ${hora}:${minutos}`;
+}
+
 function converterDataParaFormatoISO(data) {
   const partes = data.split("/");
   if (partes.length === 3) {
@@ -19,4 +30,18 @@ function converterDataParaFormatoISO(data) {
   }
 }
 
-export { formatarDataParaBR, converterDataParaFormatoISO };
+function converterDataHoraParaISO(date, time) {
+  const [dia, mes, ano] = date.split("/");
+  const [hora, minutos] = time.split(":");
+
+  const dataFormatada = `${ano}-${mes}-${dia}T${hora}:${minutos}:00.000-03:00`;
+
+  return dataFormatada;
+}
+
+export {
+  formatarDataParaBR,
+  formatarDataHoraParaBR,
+  converterDataParaFormatoISO,
+  converterDataHoraParaISO,
+};

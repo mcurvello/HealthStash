@@ -25,7 +25,7 @@ export const Login = ({ navigation }) => {
   const [profile, setProfile] = useState("patient");
   const [secureTextEntry, setSecureTextEntry] = useState(true);
 
-  const { onLogin } = useContext(AuthenticationContext);
+  const { onLogin, getPatientData } = useContext(AuthenticationContext);
 
   return (
     <KeyboardAvoidingView
@@ -147,7 +147,10 @@ export const Login = ({ navigation }) => {
                   width: "100%",
                   borderRadius: 50,
                 }}
-                onPress={() => onLogin(document, password, profile)}
+                onPress={() => {
+                  onLogin(document, password, profile);
+                  getPatientData(document, profile);
+                }}
                 contentStyle={{ height: 55 }}
               >
                 ENTRAR
@@ -173,7 +176,6 @@ export const Login = ({ navigation }) => {
                 backgroundColor="transparent"
                 size={48}
                 style={{ marginLeft: -12 }}
-                onPress={() => console.log("Pressed")}
               />
             </TouchableOpacity>
           </View>

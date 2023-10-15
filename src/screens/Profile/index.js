@@ -5,9 +5,12 @@ import { AuthenticationContext } from "../../services/authentication/Authenticat
 import { StyleSheet } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { Image } from "react-native";
+import { formatarDataParaBR } from "../../utils/date";
 
 const Profile = () => {
-  const { onLogout, user } = useContext(AuthenticationContext);
+  const { onLogout, user, userData, userType } = useContext(
+    AuthenticationContext
+  );
 
   return (
     <View style={styles.container}>
@@ -25,30 +28,75 @@ const Profile = () => {
         color="#004460"
         style={{ backgroundColor: "#fff" }}
       />
+      <Text
+        variant="headlineMedium"
+        style={{ marginTop: 16, fontFamily: "poppins-bold", color: "#fff" }}
+      >
+        {userType === "patient" ? "PACIENTE" : "MÉDICO"}
+      </Text>
+      <Text
+        variant="headlineSmall"
+        style={{ marginTop: 40, fontFamily: "poppins-bold", color: "#fff" }}
+      >
+        {userData.name[0].given[0]} {userData.name[0].family}
+      </Text>
       <View
         style={{
-          marginTop: 20,
+          marginTop: 70,
           marginBottom: 80,
-          height: 200,
-          justifyContent: "space-evenly",
-          alignItems: "center",
+          justifyContent: "center",
+          alignItems: "flex-start",
+          width: "100%",
         }}
       >
-        <Text
-          variant="titleLarge"
-          style={{ fontWeight: "bold", color: "#fff" }}
-        >
-          Marcio Curvello
-        </Text>
-        <Text variant="titleMedium" style={{ color: "#fff" }}>
-          {user.email}
-        </Text>
+        <View style={{ flexDirection: "row" }}>
+          <Text
+            variant="titleMedium"
+            style={{ fontFamily: "poppins-bold", color: "#fff" }}
+          >
+            Data de nascimento:{" "}
+          </Text>
+          <Text
+            variant="titleMedium"
+            style={{ fontFamily: "poppins-regular", color: "#fff" }}
+          >
+            {formatarDataParaBR(userData.birthDate)}
+          </Text>
+        </View>
+        <View style={{ flexDirection: "row" }}>
+          <Text
+            variant="titleMedium"
+            style={{ fontFamily: "poppins-bold", color: "#fff" }}
+          >
+            Telefone:{" "}
+          </Text>
+          <Text
+            variant="titleMedium"
+            style={{ fontFamily: "poppins-regular", color: "#fff" }}
+          >
+            {userData.telecom[0].value}
+          </Text>
+        </View>
+        <View style={{ flexDirection: "row" }}>
+          <Text
+            variant="titleMedium"
+            style={{ fontFamily: "poppins-bold", color: "#fff" }}
+          >
+            Email:{" "}
+          </Text>
+          <Text
+            variant="titleMedium"
+            style={{ fontFamily: "poppins-regular", color: "#fff" }}
+          >
+            Email: {user.email}
+          </Text>
+        </View>
       </View>
 
       <Button
         icon="logout"
         mode="contained"
-        style={{ width: "50%", backgroundColor: "#fff", marginTop: 20 }}
+        style={{ width: "50%", backgroundColor: "#fff" }}
         textColor="#004460"
         onPress={() => onLogout()}
       >

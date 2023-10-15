@@ -1,7 +1,6 @@
 import { View, Text, ScrollView, StyleSheet } from "react-native";
 import React, { useContext, useEffect, useState } from "react";
 import {
-  Badge,
   Button,
   Card,
   Modal,
@@ -23,9 +22,10 @@ import {
 } from "../../utils/date.js";
 import CustomTextInput from "../../components/CustomTextInput/index.js";
 import { AuthenticationContext } from "../../services/authentication/AuthenticationContext/index.js";
+import Schedule from "../Schedule/index.js";
 
 const Practitioners = () => {
-  const { userType } = useContext(AuthenticationContext);
+  const { userType, userData } = useContext(AuthenticationContext);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -39,7 +39,7 @@ const Practitioners = () => {
     fetchData();
   }, []);
   const [practitioners, setPractitioners] = useState();
-
+  const [selectedPractitioner, setSelectedPractitioner] = useState();
   const [visible, setVisible] = useState(false);
   const [name, setName] = useState("");
   const [familyName, setFamilyName] = useState("");
@@ -51,12 +51,6 @@ const Practitioners = () => {
 
   const showModal = () => setVisible(true);
   const hideModal = () => setVisible(false);
-
-  const [patients, setPatients] = useState([
-    { id: 1, name: "Maria", age: 35, gender: "Feminino" },
-    { id: 2, name: "João", age: 45, gender: "Masculino" },
-    { id: 3, name: "Ana", age: 28, gender: "Feminino" },
-  ]);
 
   const addPractitioner = async (
     name,
@@ -129,91 +123,98 @@ const Practitioners = () => {
           onDismiss={hideModal}
           contentContainerStyle={styles.containerStyle}
         >
-          <Image
-            style={{ width: "20%", height: "10%" }}
-            resizeMode="contain"
-            resizeMethod="scale"
-            source={require("../../../assets/logo2.png")}
-          />
-          <Title
-            style={{
-              textAlign: "center",
-              marginBottom: 24,
-              fontWeight: "bold",
-              fontSize: 24,
-            }}
-          >
-            Adicionar um médico
-          </Title>
+          {userType === "patient" && (
+            <Schedule patient={userData} practitioner={selectedPractitioner} />
+          )}
+          {userType !== "patient" && (
+            <>
+              <Image
+                style={{ width: "20%", height: "10%" }}
+                resizeMode="contain"
+                resizeMethod="scale"
+                source={require("../../../assets/logo2.png")}
+              />
+              <Title
+                style={{
+                  textAlign: "center",
+                  marginBottom: 24,
+                  fontWeight: "bold",
+                  fontSize: 24,
+                }}
+              >
+                Adicionar um médico
+              </Title>
 
-          <CustomTextInput
-            value={name}
-            onChangeText={(text) => setName(text)}
-            placeholder="Nome"
-            width="100%"
-            color="#004460"
-          />
-          <CustomTextInput
-            value={familyName}
-            onChangeText={(text) => setFamilyName(text)}
-            placeholder="Sobrenome"
-            width="100%"
-            color="#004460"
-          />
-          <CustomTextInput
-            value={birthdate}
-            onChangeText={(text) => setBirthdate(text)}
-            placeholder="Data de nascimento"
-            width="100%"
-            color="#004460"
-          />
-          <CustomTextInput
-            value={gender}
-            onChangeText={(text) => setGender(text)}
-            placeholder="Gênero"
-            width="100%"
-            color="#004460"
-          />
-          <CustomTextInput
-            value={especialidade}
-            onChangeText={(text) => setEspecialidade(text)}
-            placeholder="Especialidade"
-            width="100%"
-            color="#004460"
-          />
+              <CustomTextInput
+                value={name}
+                onChangeText={(text) => setName(text)}
+                placeholder="Nome"
+                width="100%"
+                color="#004460"
+              />
+              <CustomTextInput
+                value={familyName}
+                onChangeText={(text) => setFamilyName(text)}
+                placeholder="Sobrenome"
+                width="100%"
+                color="#004460"
+              />
+              <CustomTextInput
+                value={birthdate}
+                onChangeText={(text) => setBirthdate(text)}
+                placeholder="Data de nascimento"
+                width="100%"
+                color="#004460"
+              />
+              <CustomTextInput
+                value={gender}
+                onChangeText={(text) => setGender(text)}
+                placeholder="Gênero"
+                width="100%"
+                color="#004460"
+              />
+              <CustomTextInput
+                value={especialidade}
+                onChangeText={(text) => setEspecialidade(text)}
+                placeholder="Especialidade"
+                width="100%"
+                color="#004460"
+              />
 
-          <CustomTextInput
-            value={phone}
-            onChangeText={(text) => setPhone(text)}
-            placeholder="Telefone"
-            width="100%"
-            color="#004460"
-          />
-          <CustomTextInput
-            value={mail}
-            onChangeText={(text) => setMail(text)}
-            placeholder="E-mail"
-            width="100%"
-            color="#004460"
-          />
-          <Button
-            mode="elevated"
-            onPress={() =>
-              addPractitioner(
-                name,
-                familyName,
-                phone,
-                mail,
-                especialidade,
-                gender,
-                birthdate
-              )
-            }
-            style={styles.addButton}
-            textColor="#004460"
-          >
-            Adicionar
-          </Button>
+              <CustomTextInput
+                value={phone}
+                onChangeText={(text) => setPhone(text)}
+                placeholder="Telefone"
+                width="100%"
+                color="#004460"
+              />
+              <CustomTextInput
+                value={mail}
+                onChangeText={(text) => setMail(text)}
+                placeholder="E-mail"
+                width="100%"
+                color="#004460"
+              />
+              <Button
+                mode="elevated"
+                onPress={() =>
+                  addPractitioner(
+                    name,
+                    familyName,
+                    phone,
+                    mail,
+                    especialidade,
+                    gender,
+                    birthdate
+                  )
+                }
+                style={styles.addButton}
+                textColor="#004460"
+              >
+                Adicionar
+              </Button>
+            </>
+          )}
         </Modal>
       </Portal>
       <View style={styles.container}>
@@ -230,13 +231,20 @@ const Practitioners = () => {
 
           {practitioners &&
             practitioners.entry.map((practitioner, index) => (
-              <Card key={index} style={styles.card}>
-                <Badge theme={{ colors: { error: "green" } }}>Agendado</Badge>
+              <Card
+                key={index}
+                style={styles.card}
+                onPress={() => {
+                  setSelectedPractitioner(practitioner);
+                  showModal();
+                }}
+              >
                 <Card.Content>
                   <Text style={styles.practitionerName}>
                     {practitioner.resource.name[0].given.join(" ")}{" "}
                     {practitioner.resource.name[0].family}
                   </Text>
+
                   <Text style={styles.qualification}>
                     {practitioner.resource.qualification[0].code.text}
                   </Text>

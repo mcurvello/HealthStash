@@ -21,7 +21,7 @@ export const Practitioner = ({ navigation }) => {
   const [password, setPassword] = useState("");
   const [secureTextEntry, setSecureTextEntry] = useState(true);
 
-  const { onRegister, isLoading, error } = useContext(AuthenticationContext);
+  const { onRegister } = useContext(AuthenticationContext);
 
   return (
     <KeyboardAvoidingView
@@ -79,16 +79,16 @@ export const Practitioner = ({ navigation }) => {
               <CustomTextInput
                 value={birthdate}
                 onChangeText={(text) => setBirthdate(text)}
-                placeholder="Idade"
+                placeholder="Data de nascimento"
                 icon="calendar"
-                width={180}
+                width={230}
               />
               <CustomTextInput
                 value={gender}
                 onChangeText={(text) => setGender(text)}
                 placeholder="Gênero"
                 icon="gender-male-female"
-                width={180}
+                width={130}
               />
             </View>
 

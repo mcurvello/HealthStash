@@ -31,7 +31,7 @@ import {
 } from "../../utils/date";
 import { AuthenticationContext } from "../../services/authentication/AuthenticationContext";
 
-const Appointments = ({ navigation }) => {
+const Prescriptions = ({ navigation }) => {
   const { userType, userData } = useContext(AuthenticationContext);
 
   const [patients, setPatients] = useState();
@@ -262,9 +262,13 @@ const Appointments = ({ navigation }) => {
             )}
             {appointments && (
               <>
-                <Text style={styles.subtitle}>Consultas agendadas</Text>
+                <Text style={styles.subtitle}>Prescrições médicas</Text>
                 {appointments.map((appointment, index) => (
-                  <Card key={index} style={styles.card}>
+                  <Card
+                    key={index}
+                    style={styles.card}
+                    onPress={() => navigation.navigate("Buscar")}
+                  >
                     <Card.Content>
                       <Text style={styles.appointmentDate}>
                         {formatarDataHoraParaBR(appointment.dataHoraAgendada)}
@@ -278,32 +282,12 @@ const Appointments = ({ navigation }) => {
                         Especialidade:{" "}
                         {appointment.medico.qualification[0].code.text}
                       </Text>
-                      <Text>
-                        Telefone: {appointment.medico.telecom[0].value}
-                      </Text>
                     </Card.Content>
                   </Card>
                 ))}
               </>
             )}
           </ScrollView>
-
-          <Button
-            mode="contained"
-            onPress={() =>
-              userType === "patient"
-                ? navigation.navigate("Médicos")
-                : userType === "practitioner"
-                ? navigation.navigate("Pacientes")
-                : showModal()
-            }
-            style={styles.addButton}
-            textColor="#004460"
-          >
-            {appointments && userType === "practitioner"
-              ? "Agendar retorno para paciente"
-              : "Agendar consulta"}
-          </Button>
         </View>
       </PaperProvider>
     </KeyboardAvoidingView>
@@ -360,4 +344,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Appointments;
+export default Prescriptions;

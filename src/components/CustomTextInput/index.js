@@ -17,7 +17,7 @@ function CustomTextInput({
       placeholderTextColor={color || "#fff"}
       mode="outlined"
       value={value}
-      left={
+      right={
         icon && (
           <TextInput.Icon
             iconColor={color || "#fff"}
@@ -37,6 +37,7 @@ function CustomTextInput({
         borderColor: color || "#fff",
         borderWidth: 0.5,
       }}
+      contentStyle={{ fontFamily: "poppins-regular", fontSize: 15 }}
       onChangeText={onChangeText}
       secureTextEntry={secureTextEntry}
     />

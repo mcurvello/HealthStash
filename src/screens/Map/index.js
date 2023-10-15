@@ -20,7 +20,7 @@ export const Map = () => {
       <View
         style={{
           position: "absolute",
-          top: 50,
+          top: 20,
           zIndex: 999,
           width: "90%",
           alignSelf: "center",

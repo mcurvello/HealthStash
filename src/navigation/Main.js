@@ -8,12 +8,11 @@ import Practitioners from "../screens/Practitioners";
 import { Map } from "../screens/Map";
 import { AuthenticationContext } from "../services/authentication/AuthenticationContext";
 import Appointments from "../screens/Appointments";
+import Prescriptions from "../screens/Prescriptions";
+import { createStackNavigator } from "@react-navigation/stack";
 
 const Tab = createBottomTabNavigator();
-
-const Consulta = () => {
-  return <Map />;
-};
+const Stack = createStackNavigator();
 
 const TAB_ICON = {
   Home: "home",
@@ -36,6 +35,19 @@ const screenOptions = ({ route }) => {
   };
 };
 
+const PrescriptionsStack = () => {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen
+        name="Prescrições médicas"
+        component={Prescriptions}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen name="Buscar" component={Map} />
+    </Stack.Navigator>
+  );
+};
+
 export const Main = () => {
   const { userType } = useContext(AuthenticationContext);
 
@@ -50,7 +62,7 @@ export const Main = () => {
       )}
       <Tab.Screen name="Consultas" component={Appointments} />
       {userType === "patient" && (
-        <Tab.Screen name="Prescrições" component={Appointments} />
+        <Tab.Screen name="Prescrições" component={PrescriptionsStack} />
       )}
       <Tab.Screen name="Perfil" component={Profile} />
     </Tab.Navigator>

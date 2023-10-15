@@ -26,10 +26,12 @@ import {
 import { AuthenticationContext } from "../../services/authentication/AuthenticationContext";
 import { Map } from "../Map";
 import Prescription from "../Prescription";
+import Schedule from "../Schedule";
 
 const Patients = ({ navigation }) => {
   const [patients, setPatients] = useState();
   const [selectedPatient, setSelectedPatient] = useState(null);
+  const [shouldAddPatient, setShouldAddPatient] = useState(false);
   const { userType } = useContext(AuthenticationContext);
 
   useEffect(() => {
@@ -66,7 +68,8 @@ const Patients = ({ navigation }) => {
     middleName,
     lastName,
     gender,
-    birthdate
+    birthdate,
+    address
   ) => {
     const accessToken = await getAuthToken();
     const patientData = {
@@ -86,6 +89,10 @@ const Patients = ({ navigation }) => {
           use: "mobile",
           rank: 1,
         },
+        {
+          system: "email",
+          value: "joao@teste.com",
+        },
       ],
       gender: gender.toLowerCase() == "masculino" ? "male" : "female",
       birthDate: converterDataParaFormatoISO(birthdate),
@@ -93,15 +100,7 @@ const Patients = ({ navigation }) => {
         {
           use: "home",
           type: "both",
-          text: "534 Erewhon St PeasantVille, Rainbow, Vic  3999",
-          line: ["534 Erewhon St"],
-          city: "PleasantVille",
-          district: "Rainbow",
-          state: "Vic",
-          postalCode: "3999",
-          period: {
-            start: "1974-12-25",
-          },
+          text: address,
         },
       ],
     };
@@ -123,7 +122,7 @@ const Patients = ({ navigation }) => {
             onDismiss={hideModal}
             contentContainerStyle={containerStyle}
           >
-            {userType === "clinic" && (
+            {shouldAddPatient && (
               <>
                 <Title
                   style={{
@@ -185,7 +184,8 @@ const Patients = ({ navigation }) => {
                       middleName,
                       lastName,
                       gender,
-                      birthdate
+                      birthdate,
+                      address
                     )
                   }
                   style={styles.addButton}
@@ -195,7 +195,7 @@ const Patients = ({ navigation }) => {
                 </Button>
               </>
             )}
-            {userType === "practitioner" && (
+            {!shouldAddPatient && userType === "practitioner" && (
               <>
                 <IconButton
                   icon="close"
@@ -225,11 +225,12 @@ const Patients = ({ navigation }) => {
             <Text style={styles.subtitle}>Pacientes</Text>
 
             {patients &&
-              patients.entry.slice(4).map((patient, index) => (
+              patients.entry.map((patient, index) => (
                 <Card
                   key={index}
                   style={styles.card}
                   onPress={() => {
+                    setShouldAddPatient(false);
                     setSelectedPatient(patient);
                     showModal();
                   }}
@@ -254,10 +255,13 @@ const Patients = ({ navigation }) => {
               ))}
           </ScrollView>
 
-          {userType === "clinic" && (
+          {userType !== "patient" && (
             <Button
               mode="contained"
-              onPress={showModal}
+              onPress={() => {
+                setShouldAddPatient(true);
+                showModal();
+              }}
               style={styles.addButton}
               textColor="#004460"
             >

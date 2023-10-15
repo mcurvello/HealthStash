@@ -36,7 +36,7 @@ const getAuthToken = async () => {
 };
 
 async function getPatients(accessToken) {
-  const baseUrl = fhirEndpoint + "Patient";
+  const baseUrl = fhirEndpoint + "Patient?_count=100";
 
   try {
     const response = await axios.get(baseUrl, {
@@ -62,6 +62,20 @@ async function postPatient(accessToken, data) {
   } catch (error) {
     console.log("\tError persisting patient: " + error.response.status);
     return null;
+  }
+}
+
+async function getPractitionerById(accessToken, id) {
+  const baseUrl = fhirEndpoint + `Practitioner/${id}`;
+
+  try {
+    const response = await axios.get(baseUrl, {
+      headers: getHttpHeader(accessToken),
+    });
+
+    return response?.data;
+  } catch (error) {
+    console.log("\tError getting practitioner data: " + error.response.status);
   }
 }
 
@@ -95,10 +109,47 @@ async function postPractitioner(accessToken, data) {
   }
 }
 
+async function getAppointments(accessToken) {
+  const baseUrl = fhirEndpoint + "Appointment";
+
+  try {
+    const response = await axios.get(baseUrl, {
+      headers: getHttpHeader(accessToken),
+    });
+
+    return response?.data;
+  } catch (error) {
+    console.log("\tError getting appointment data: " + error.response.status);
+  }
+}
+
+async function postAppointment(accessToken, appointmentData) {
+  try {
+    const response = await axios.post(
+      fhirEndpoint + "Appointment",
+      appointmentData,
+      {
+        headers: getHttpHeader(accessToken),
+      }
+    );
+    const resourceId = response.data.id;
+    console.log(
+      "\tAppointment ingested: " + resourceId + ". HTTP " + response.status
+    );
+    return resourceId;
+  } catch (error) {
+    console.log("\tError persisting appointment: " + error.response.status);
+    return null;
+  }
+}
+
 export {
   getAuthToken,
   getPatients,
   postPatient,
+  getPractitionerById,
   getPractitioners,
   postPractitioner,
+  getAppointments,
+  postAppointment,
 };

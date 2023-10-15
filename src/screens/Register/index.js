@@ -14,12 +14,27 @@ import CustomTextInput from "../../components/CustomTextInput";
 
 export const Register = ({ navigation }) => {
   const [document, setDocument] = useState("");
+  const [isValidDocument, setIsValidDocument] = useState(false);
+  const [isPatient, setIsPatient] = useState(false);
   const [phone, setPhone] = useState("");
-  const [mail, setMail] = useState("");
-  const [password, setPassword] = useState("");
-  const [secureTextEntry, setSecureTextEntry] = useState(true);
 
-  const { onRegister, isLoading, error } = useContext(AuthenticationContext);
+  const verificaCPFouCRM = (dado) => {
+    const cpfPattern = /^(\d{11}|\d{3}\.\d{3}\.\d{3}-\d{2})$/;
+    const crmPattern = /^\d{5}$/;
+
+    if (cpfPattern.test(dado)) {
+      setIsPatient(true);
+      setIsValidDocument(true);
+      navigation.navigate("Patient", { phone: phone });
+    } else if (crmPattern.test(dado)) {
+      setIsPatient(false);
+      setIsValidDocument(true);
+      navigation.navigate("Practitioner", { phone: phone });
+    } else {
+      setIsPatient(false);
+      setIsValidDocument(false);
+    }
+  };
 
   return (
     <KeyboardAvoidingView
@@ -42,14 +57,22 @@ export const Register = ({ navigation }) => {
             <View>
               <Text
                 variant="displaySmall"
-                style={{ fontWeight: 600, color: "#fff" }}
+                style={{
+                  fontFamily: "poppins-bold",
+                  fontWeight: 600,
+                  color: "#fff",
+                }}
               >
                 Cadastro
               </Text>
 
               <Text
                 variant="headlineMedium"
-                style={{ fontWeight: 600, color: "#fff" }}
+                style={{
+                  fontFamily: "poppins-bold",
+                  fontWeight: 600,
+                  color: "#fff",
+                }}
               >
                 Health Stash
               </Text>
@@ -61,13 +84,21 @@ export const Register = ({ navigation }) => {
             <View style={{ alignItems: "center", marginBottom: 48 }}>
               <Text
                 variant="bodyLarge"
-                style={{ fontWeight: 600, color: "#fff" }}
+                style={{
+                  fontFamily: "poppins-regular",
+                  fontWeight: 600,
+                  color: "#fff",
+                }}
               >
                 Para pacientes: informe o seu CPF
               </Text>
               <Text
                 variant="bodyLarge"
-                style={{ fontWeight: 600, color: "#fff" }}
+                style={{
+                  fontFamily: "poppins-regular",
+                  fontWeight: 600,
+                  color: "#fff",
+                }}
               >
                 Para médicos: informe o seu CRM
               </Text>
@@ -95,7 +126,9 @@ export const Register = ({ navigation }) => {
               marginTop: 30,
             }}
             labelStyle={{ fontWeight: 800 }}
-            onPress={() => onRegister(mail, password)}
+            onPress={async () => {
+              verificaCPFouCRM(document);
+            }}
             contentStyle={{ height: 55 }}
           >
             CONTINUAR

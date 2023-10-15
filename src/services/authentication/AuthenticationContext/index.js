@@ -2,12 +2,14 @@ import React, { useState, createContext } from "react";
 import * as firebase from "firebase";
 
 import { loginRequest } from "../AuthenticationService";
+import { getAuthToken, getPatients } from "../../api/api";
 
 export const AuthenticationContext = createContext();
 
 export const AuthenticationContextProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [user, setUser] = useState(null);
+  const [userData, setUserData] = useState({});
   const [error, setError] = useState(null);
   const [userType, setUserType] = useState("patient");
 
@@ -19,6 +21,41 @@ export const AuthenticationContextProvider = ({ children }) => {
       setIsLoading(false);
     }
   });
+
+  const getPatientData = async (emailToFind, profile) => {
+    const accessToken = await getAuthToken();
+    if (accessToken) {
+      if (profile === "patient") {
+        const result = await getPatients(accessToken);
+
+        const foundPatient = result.entry.find((patient) => {
+          const email = patient.resource.telecom.find(
+            (contact) =>
+              contact.system === "email" && contact.value === emailToFind
+          );
+          return email !== undefined;
+        });
+
+        if (foundPatient) {
+          const { active, name, telecom, gender, birthDate, address, id } =
+            foundPatient.resource;
+
+          const data = {
+            resourceType: "Patient",
+            active,
+            name,
+            telecom,
+            gender,
+            birthDate,
+            address,
+            id,
+          };
+
+          setUserData(data);
+        }
+      }
+    }
+  };
 
   const onLogin = (email, password, profile) => {
     setIsLoading(true);
@@ -58,12 +95,16 @@ export const AuthenticationContextProvider = ({ children }) => {
       value={{
         isAuthenticated: !!user,
         user,
+        userData,
         userType,
         isLoading,
         error,
         onLogin,
         onRegister,
         onLogout,
+        setUserType,
+        setUserData,
+        getPatientData,
       }}
     >
       {children}
