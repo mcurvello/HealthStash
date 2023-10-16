@@ -11,7 +11,6 @@ const fhirEndpoint =
 
 const useAuth = () => {
   const [accessToken, setAccessToken] = useState(null);
-  console.log(aadTenant);
 
   const getAuthToken = useCallback(async () => {
     try {

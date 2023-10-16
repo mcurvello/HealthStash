@@ -35,6 +35,20 @@ const getAuthToken = async () => {
   }
 };
 
+async function getPatientById(accessToken, id) {
+  const baseUrl = fhirEndpoint + `Patient/${id}`;
+
+  try {
+    const response = await axios.get(baseUrl, {
+      headers: getHttpHeader(accessToken),
+    });
+
+    return response?.data;
+  } catch (error) {
+    console.log("\tError getting practitioner data: " + error.response.status);
+  }
+}
+
 async function getPatients(accessToken) {
   const baseUrl = fhirEndpoint + "Patient?_count=100";
 
@@ -80,7 +94,7 @@ async function getPractitionerById(accessToken, id) {
 }
 
 async function getPractitioners(accessToken) {
-  const baseUrl = fhirEndpoint + "Practitioner";
+  const baseUrl = fhirEndpoint + "Practitioner?_count=100";
 
   try {
     const response = await axios.get(baseUrl, {
@@ -145,6 +159,7 @@ async function postAppointment(accessToken, appointmentData) {
 
 export {
   getAuthToken,
+  getPatientById,
   getPatients,
   postPatient,
   getPractitionerById,

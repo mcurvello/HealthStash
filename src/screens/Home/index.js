@@ -61,7 +61,6 @@ const Home = ({ navigation }) => {
                 backgroundColor="transparent"
                 size={48}
                 style={{ marginLeft: -12 }}
-                onPress={() => console.log("Pressed")}
               />
             </TouchableOpacity>
           )}
@@ -85,7 +84,6 @@ const Home = ({ navigation }) => {
                 backgroundColor="transparent"
                 size={48}
                 style={{ marginLeft: -12 }}
-                onPress={() => console.log("Pressed")}
               />
             </TouchableOpacity>
           )}
@@ -108,7 +106,6 @@ const Home = ({ navigation }) => {
               backgroundColor="transparent"
               size={48}
               style={{ marginLeft: -12 }}
-              onPress={() => console.log("Pressed")}
             />
           </TouchableOpacity>
           {userType === "patient" && (
@@ -131,7 +128,6 @@ const Home = ({ navigation }) => {
                 backgroundColor="transparent"
                 size={48}
                 style={{ marginLeft: -12 }}
-                onPress={() => console.log("Pressed")}
               />
             </TouchableOpacity>
           )}
@@ -162,7 +158,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: "poppins-bold",
-    fontSize: 32,
+    fontSize: 36,
     color: "white",
   },
   subtitle: {

@@ -20,14 +20,15 @@ import { Image } from "react-native";
 import {
   getAppointments,
   getAuthToken,
+  getPatientById,
   getPatients,
   getPractitionerById,
   postPatient,
 } from "../../services/api/api";
 import {
-  formatarDataParaBR,
   converterDataParaFormatoISO,
   formatarDataHoraParaBR,
+  formatarDataParaBR,
 } from "../../utils/date";
 import { AuthenticationContext } from "../../services/authentication/AuthenticationContext";
 
@@ -48,7 +49,10 @@ const Appointments = ({ navigation }) => {
           if (appointment.resourceType === "Appointment") {
             if (Array.isArray(appointment.participant)) {
               return appointment.participant.some((participant) => {
-                return participant.actor.reference === `Patient/${userData.id}`;
+                return userType === "patient"
+                  ? participant.actor.reference === `Patient/${userData.id}`
+                  : participant.actor.reference ===
+                      `Practitioner/${userData.id}`;
               });
             }
           }
@@ -67,15 +71,26 @@ const Appointments = ({ navigation }) => {
               ? practitionerReference.split("/")[1]
               : null;
 
-            if (practitionerId) {
-              console.log(practitionerId);
+            const patientReference = appointment.participant.find(
+              (participant) =>
+                participant.actor.reference.startsWith("Patient/")
+            )?.actor.reference;
+
+            const patientId = patientReference
+              ? patientReference.split("/")[1]
+              : null;
+
+            if (practitionerId && patientId) {
               const practitioner = await getPractitionerById(
                 accessToken,
                 practitionerId
               );
+              const patient = await getPatientById(accessToken, patientId);
               return {
                 dataHoraAgendada: appointment.start,
+                motivo: appointment.description,
                 medico: practitioner,
+                paciente: patient,
               };
             }
 
@@ -88,9 +103,8 @@ const Appointments = ({ navigation }) => {
     };
 
     fetchData();
-  }, []);
+  }, [appointments]);
 
-  console.log(appointments);
   const [visible, setVisible] = useState(false);
   const [firstName, setFirstName] = useState("");
   const [middleName, setMiddleName] = useState("");
@@ -241,7 +255,7 @@ const Appointments = ({ navigation }) => {
           >
             <StatusBar style="light" />
             <View style={styles.header}>
-              <Text style={styles.title}>HealthStash</Text>
+              <Text style={styles.title}>Health Stash</Text>
               <Image
                 source={require("../../../assets/logo.png")}
                 style={styles.image}
@@ -264,23 +278,44 @@ const Appointments = ({ navigation }) => {
               <>
                 <Text style={styles.subtitle}>Consultas agendadas</Text>
                 {appointments.map((appointment, index) => (
-                  <Card key={index} style={styles.card}>
+                  <Card key={index} style={styles.card} onPress={showModal}>
                     <Card.Content>
                       <Text style={styles.appointmentDate}>
                         {formatarDataHoraParaBR(appointment.dataHoraAgendada)}
                       </Text>
 
-                      <Text>
-                        Médico: {appointment.medico.name[0].given[0]}{" "}
-                        {appointment.medico.name[0].family}
-                      </Text>
-                      <Text>
-                        Especialidade:{" "}
-                        {appointment.medico.qualification[0].code.text}
-                      </Text>
-                      <Text>
-                        Telefone: {appointment.medico.telecom[0].value}
-                      </Text>
+                      {userType === "patient" && (
+                        <>
+                          <Text>
+                            Médico: {appointment.medico.name[0].given[0]}{" "}
+                            {appointment.medico.name[0].family}
+                          </Text>
+                          <Text>
+                            Especialidade:{" "}
+                            {appointment.medico.qualification[0].code.text}
+                          </Text>
+                          <Text>
+                            Telefone: {appointment.medico.telecom[0].value}
+                          </Text>
+                        </>
+                      )}
+                      {userType === "practitioner" && (
+                        <>
+                          <Text style={styles.description}>
+                            Paciente:{" "}
+                            {appointment.paciente.name[0].given.join(" ")}{" "}
+                            {appointment.paciente.name[0].family}
+                          </Text>
+                          <Text>Motivo: {appointment.motivo}</Text>
+                          <Text>
+                            Data de nascimento:{" "}
+                            {formatarDataParaBR(appointment.paciente.birthDate)}
+                          </Text>
+                          <Text>
+                            Telefone: {appointment.paciente.telecom[0].value}
+                          </Text>
+                        </>
+                      )}
                     </Card.Content>
                   </Card>
                 ))}
@@ -300,7 +335,7 @@ const Appointments = ({ navigation }) => {
             style={styles.addButton}
             textColor="#004460"
           >
-            {appointments && userType === "practitioner"
+            {userType === "practitioner"
               ? "Agendar retorno para paciente"
               : "Agendar consulta"}
           </Button>
@@ -327,6 +362,7 @@ const styles = StyleSheet.create({
     width: "35%",
   },
   title: {
+    fontFamily: "poppins-bold",
     fontSize: 36,
     fontWeight: "bold",
     color: "white",
@@ -357,6 +393,10 @@ const styles = StyleSheet.create({
   addButton: {
     margin: 16,
     backgroundColor: "white",
+  },
+  description: {
+    marginBottom: 12,
+    fontFamily: "poppins-bold",
   },
 });
 

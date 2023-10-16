@@ -22,10 +22,12 @@ import {
 } from "../../utils/date.js";
 import { AuthenticationContext } from "../../services/authentication/AuthenticationContext/index.js";
 
-const Schedule = ({ patient, practitioner }) => {
+const Schedule = ({ patient, practitioner, closeModal }) => {
   const [practitioners, setPractitioners] = useState();
   const [date, setDate] = useState();
   const [time, setTime] = useState();
+
+  const { userType } = useContext(AuthenticationContext);
 
   const [visible, setVisible] = useState(false);
   const [description, setDescription] = useState("");
@@ -71,7 +73,6 @@ const Schedule = ({ patient, practitioner }) => {
     setPractitioners(result);
     hideModal();
   };
-  console.log(practitioner);
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -111,24 +112,44 @@ const Schedule = ({ patient, practitioner }) => {
           <View style={styles.label}>
             <Text variant="labelLarge">Médico</Text>
             <Surface style={styles.surface}>
-              <Text>
-                {practitioner.resource.name[0].given.join(" ")}{" "}
-                {practitioner.resource.name[0].family}
-              </Text>
+              {userType === "patient" && (
+                <Text>
+                  {practitioner.resource.name[0].given.join(" ")}{" "}
+                  {practitioner.resource.name[0].family}
+                </Text>
+              )}
+              {userType !== "patient" && (
+                <Text>
+                  {practitioner.name[0].given} {practitioner.name[0].family}
+                </Text>
+              )}
             </Surface>
           </View>
           <View style={styles.label}>
             <Text variant="labelLarge">Especialidade</Text>
             <Surface style={styles.surface}>
-              <Text>{practitioner.resource.qualification[0].code.text}</Text>
+              {userType === "patient" && (
+                <Text>{practitioner.resource.qualification[0].code.text}</Text>
+              )}
+              {userType !== "patient" && (
+                <Text>{practitioner.qualification[0].code.text}</Text>
+              )}
             </Surface>
           </View>
           <View style={styles.label}>
             <Text variant="labelLarge">Paciente</Text>
             <Surface style={styles.surface}>
-              <Text>
-                {patient.name[0].given.join(" ")} {patient.name[0].family}
-              </Text>
+              {userType === "patient" && (
+                <Text>
+                  {patient.name[0].given.join(" ")} {patient.name[0].family}
+                </Text>
+              )}
+              {userType !== "patient" && (
+                <Text>
+                  {patient.resource.name[0].given.join(" ")}{" "}
+                  {patient.resource.name[0].family}
+                </Text>
+              )}
             </Surface>
           </View>
 
@@ -148,15 +169,18 @@ const Schedule = ({ patient, practitioner }) => {
 
           <Button
             mode="elevated"
-            onPress={() =>
+            onPress={() => {
               addAppointment(
-                patient.id,
-                practitioner.resource.id,
+                userType === "patient" ? patient.id : patient.resource.id,
+                userType === "patient"
+                  ? practitioner.resource.id
+                  : practitioner.id,
                 description,
                 date,
                 time
-              )
-            }
+              );
+              closeModal();
+            }}
             style={styles.addButton}
             textColor="#004460"
           >

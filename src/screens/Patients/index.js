@@ -32,7 +32,7 @@ const Patients = ({ navigation }) => {
   const [patients, setPatients] = useState();
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [shouldAddPatient, setShouldAddPatient] = useState(false);
-  const { userType } = useContext(AuthenticationContext);
+  const { userType, userData } = useContext(AuthenticationContext);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -204,7 +204,11 @@ const Patients = ({ navigation }) => {
                   onPress={() => hideModal()}
                   style={{ position: "absolute", top: 0, right: 0 }}
                 />
-                <Prescription patient={selectedPatient} />
+                <Schedule
+                  patient={selectedPatient}
+                  practitioner={userData}
+                  closeModal={hideModal}
+                />
               </>
             )}
           </Modal>
@@ -216,7 +220,7 @@ const Patients = ({ navigation }) => {
           >
             <StatusBar style="light" />
             <View style={styles.header}>
-              <Text style={styles.title}>HealthStash</Text>
+              <Text style={styles.title}>Health Stash</Text>
               <Image
                 source={require("../../../assets/logo.png")}
                 style={styles.image}
@@ -291,11 +295,13 @@ const styles = StyleSheet.create({
     width: "35%",
   },
   title: {
+    fontFamily: "poppins-bold",
     fontSize: 36,
     fontWeight: "bold",
     color: "white",
   },
   subtitle: {
+    fontFamily: "poppins-bold",
     fontSize: 32,
     color: "white",
     marginBottom: 40,

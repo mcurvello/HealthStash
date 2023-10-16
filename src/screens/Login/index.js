@@ -25,7 +25,7 @@ export const Login = ({ navigation }) => {
   const [profile, setProfile] = useState("patient");
   const [secureTextEntry, setSecureTextEntry] = useState(true);
 
-  const { onLogin, getPatientData } = useContext(AuthenticationContext);
+  const { onLogin, getUserData } = useContext(AuthenticationContext);
 
   return (
     <KeyboardAvoidingView
@@ -149,7 +149,7 @@ export const Login = ({ navigation }) => {
                 }}
                 onPress={() => {
                   onLogin(document, password, profile);
-                  getPatientData(document, profile);
+                  getUserData(document, profile);
                 }}
                 contentStyle={{ height: 55 }}
               >

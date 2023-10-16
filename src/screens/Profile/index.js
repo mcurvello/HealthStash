@@ -16,7 +16,7 @@ const Profile = () => {
     <View style={styles.container}>
       <StatusBar style="light" />
       <View style={styles.header}>
-        <Text style={styles.title}>HealthStash</Text>
+        <Text style={styles.title}>Health Stash</Text>
         <Image
           source={require("../../../assets/logo.png")}
           style={styles.image}
@@ -32,7 +32,11 @@ const Profile = () => {
         variant="headlineMedium"
         style={{ marginTop: 16, fontFamily: "poppins-bold", color: "#fff" }}
       >
-        {userType === "patient" ? "PACIENTE" : "MÉDICO"}
+        {userType === "patient"
+          ? "PACIENTE"
+          : userData.gender === "male"
+          ? "MÉDICO"
+          : "MÉDICA"}
       </Text>
       <Text
         variant="headlineSmall"
@@ -88,7 +92,7 @@ const Profile = () => {
             variant="titleMedium"
             style={{ fontFamily: "poppins-regular", color: "#fff" }}
           >
-            Email: {user.email}
+            {user.email}
           </Text>
         </View>
       </View>
@@ -125,6 +129,7 @@ const styles = StyleSheet.create({
     width: "35%",
   },
   title: {
+    fontFamily: "poppins-bold",
     fontSize: 36,
     fontWeight: "bold",
     color: "white",

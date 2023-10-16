@@ -68,7 +68,6 @@ const Prescriptions = ({ navigation }) => {
               : null;
 
             if (practitionerId) {
-              console.log(practitionerId);
               const practitioner = await getPractitionerById(
                 accessToken,
                 practitionerId
@@ -88,9 +87,8 @@ const Prescriptions = ({ navigation }) => {
     };
 
     fetchData();
-  }, []);
+  }, [appointments]);
 
-  console.log(appointments);
   const [visible, setVisible] = useState(false);
   const [firstName, setFirstName] = useState("");
   const [middleName, setMiddleName] = useState("");

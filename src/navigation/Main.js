@@ -43,7 +43,11 @@ const PrescriptionsStack = () => {
         component={Prescriptions}
         options={{ headerShown: false }}
       />
-      <Stack.Screen name="Buscar" component={Map} />
+      <Stack.Screen
+        name="Buscar"
+        component={Map}
+        options={{ headerBackTitle: "Voltar" }}
+      />
     </Stack.Navigator>
   );
 };

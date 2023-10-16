@@ -2,7 +2,7 @@ import React, { useState, createContext } from "react";
 import * as firebase from "firebase";
 
 import { loginRequest } from "../AuthenticationService";
-import { getAuthToken, getPatients } from "../../api/api";
+import { getAuthToken, getPatients, getPractitioners } from "../../api/api";
 
 export const AuthenticationContext = createContext();
 
@@ -22,7 +22,7 @@ export const AuthenticationContextProvider = ({ children }) => {
     }
   });
 
-  const getPatientData = async (emailToFind, profile) => {
+  const getUserData = async (emailToFind, profile) => {
     const accessToken = await getAuthToken();
     if (accessToken) {
       if (profile === "patient") {
@@ -45,6 +45,43 @@ export const AuthenticationContextProvider = ({ children }) => {
             active,
             name,
             telecom,
+            gender,
+            birthDate,
+            address,
+            id,
+          };
+
+          setUserData(data);
+        }
+      } else if (profile === "practitioner") {
+        const result = await getPractitioners(accessToken);
+
+        const foundPractitioner = result.entry.find((patient) => {
+          const email = patient.resource.telecom.find(
+            (contact) =>
+              contact.system === "email" && contact.value === emailToFind
+          );
+          return email !== undefined;
+        });
+
+        if (foundPractitioner) {
+          const {
+            active,
+            name,
+            telecom,
+            qualification,
+            gender,
+            birthDate,
+            address,
+            id,
+          } = foundPractitioner.resource;
+
+          const data = {
+            resourceType: "Practitioner",
+            active,
+            name,
+            telecom,
+            qualification,
             gender,
             birthDate,
             address,
@@ -104,7 +141,7 @@ export const AuthenticationContextProvider = ({ children }) => {
         onLogout,
         setUserType,
         setUserData,
-        getPatientData,
+        getUserData,
       }}
     >
       {children}

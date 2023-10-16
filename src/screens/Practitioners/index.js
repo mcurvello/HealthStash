@@ -84,12 +84,6 @@ const Practitioners = () => {
       qualification: [
         {
           code: {
-            coding: [
-              {
-                system: "http://www.nlm.nih.gov/research/umls/rxnorm",
-                code: "Physician",
-              },
-            ],
             text: especialidade,
           },
           period: {
@@ -124,7 +118,11 @@ const Practitioners = () => {
           contentContainerStyle={styles.containerStyle}
         >
           {userType === "patient" && (
-            <Schedule patient={userData} practitioner={selectedPractitioner} />
+            <Schedule
+              patient={userData}
+              practitioner={selectedPractitioner}
+              closeModal={hideModal}
+            />
           )}
           {userType !== "patient" && (
             <>
