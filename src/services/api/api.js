@@ -124,7 +124,7 @@ async function postPractitioner(accessToken, data) {
 }
 
 async function getAppointments(accessToken) {
-  const baseUrl = fhirEndpoint + "Appointment";
+  const baseUrl = fhirEndpoint + "Appointment?_count=100";
 
   try {
     const response = await axios.get(baseUrl, {
@@ -157,6 +157,47 @@ async function postAppointment(accessToken, appointmentData) {
   }
 }
 
+async function postCondition(accessToken, data) {
+  try {
+    const response = await axios.post(fhirEndpoint + "Condition", data, {
+      headers: getHttpHeader(accessToken),
+    });
+    const resourceId = response.data.id;
+    console.log(
+      "\tCondition ingested: " + resourceId + ". HTTP " + response.status
+    );
+    return resourceId;
+  } catch (error) {
+    console.log("\tError persisting condition: " + error.response.status);
+    return null;
+  }
+}
+
+async function postMedicationRequest(accessToken, data) {
+  try {
+    const response = await axios.post(
+      fhirEndpoint + "MedicationRequest",
+      data,
+      {
+        headers: getHttpHeader(accessToken),
+      }
+    );
+    const resourceId = response.data.id;
+    console.log(
+      "\tMedication request ingested: " +
+        resourceId +
+        ". HTTP " +
+        response.status
+    );
+    return resourceId;
+  } catch (error) {
+    console.log(
+      "\tError persisting medication request: " + error.response.status
+    );
+    return null;
+  }
+}
+
 export {
   getAuthToken,
   getPatientById,
@@ -167,4 +208,6 @@ export {
   postPractitioner,
   getAppointments,
   postAppointment,
+  postCondition,
+  postMedicationRequest,
 };

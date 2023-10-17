@@ -4,17 +4,18 @@ import {
   ScrollView,
   StyleSheet,
   KeyboardAvoidingView,
+  TouchableOpacity,
 } from "react-native";
 import React, { useContext, useEffect, useState } from "react";
 import {
+  Avatar,
+  Badge,
   Button,
   Card,
   IconButton,
   Modal,
   PaperProvider,
   Portal,
-  TextInput,
-  Title,
 } from "react-native-paper";
 import { StatusBar } from "expo-status-bar";
 import { Image } from "react-native";
@@ -22,65 +23,58 @@ import {
   getAppointments,
   getAuthToken,
   getPatientById,
-  getPatients,
   getPractitionerById,
-  postPatient,
 } from "../../services/api/api";
-import {
-  converterDataParaFormatoISO,
-  formatarDataHoraParaBR,
-  formatarDataParaBR,
-} from "../../utils/date";
+import { formatarDataHoraParaBR, formatarDataParaBR } from "../../utils/date";
 import { AuthenticationContext } from "../../services/authentication/AuthenticationContext";
 import Prescription from "../Prescription";
+import Condition from "../Condition";
 
 const Appointments = ({ navigation }) => {
   const { userType, userData } = useContext(AuthenticationContext);
 
-  const [patients, setPatients] = useState();
   const [appointments, setAppointments] = useState();
+  const [todayAppointments, setTodayAppointments] = useState();
+  const [scheduledAppointments, setScheduledAppointments] = useState();
+  const [allDoneAppointments, setAllDoneAppointments] = useState();
+  const [shouldAddCondition, setShouldAddCondition] = useState(false);
+  const [shouldAddPrescription, setShouldAddPrescription] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       const accessToken = await getAuthToken();
       if (accessToken) {
         const result = await getAppointments(accessToken);
-
-        const appointmentsPatient = result.entry.filter((entry) => {
-          const appointment = entry.resource;
-          if (appointment.resourceType === "Appointment") {
-            if (Array.isArray(appointment.participant)) {
+        const appointmentsFiltered = result.entry
+          .map((entry) => entry.resource)
+          .filter((appointment) => {
+            if (
+              appointment.resourceType === "Appointment" &&
+              Array.isArray(appointment.participant)
+            ) {
               return appointment.participant.some((participant) => {
+                const participantId = participant.actor.reference.split("/")[1];
                 return userType === "patient"
-                  ? participant.actor.reference === `Patient/${userData.id}`
-                  : participant.actor.reference ===
-                      `Practitioner/${userData.id}`;
+                  ? participantId === userData.id
+                  : participantId === userData.id;
               });
             }
-          }
-          return false;
-        });
+            return false;
+          });
 
         const consultasComDadosDoMedico = await Promise.all(
-          appointmentsPatient.map(async (consulta) => {
-            const appointment = consulta.resource;
-            const practitionerReference = appointment.participant.find(
-              (participant) =>
+          appointmentsFiltered.map(async (appointment) => {
+            const practitionerId = appointment.participant
+              .find((participant) =>
                 participant.actor.reference.startsWith("Practitioner/")
-            )?.actor.reference;
+              )
+              ?.actor.reference.split("/")[1];
 
-            const practitionerId = practitionerReference
-              ? practitionerReference.split("/")[1]
-              : null;
-
-            const patientReference = appointment.participant.find(
-              (participant) =>
+            const patientId = appointment.participant
+              .find((participant) =>
                 participant.actor.reference.startsWith("Patient/")
-            )?.actor.reference;
-
-            const patientId = patientReference
-              ? patientReference.split("/")[1]
-              : null;
+              )
+              ?.actor.reference.split("/")[1];
 
             if (practitionerId && patientId) {
               const practitioner = await getPractitionerById(
@@ -95,12 +89,53 @@ const Appointments = ({ navigation }) => {
                 paciente: patient,
               };
             }
-
             return null;
           })
         );
 
+        const dataAtual = new Date();
+        const todayAppointments = [];
+        const allDoneAppointments = [];
+        const scheduledAppointments = [];
+
+        consultasComDadosDoMedico.forEach((item) => {
+          const dataAgendada = new Date(item.dataHoraAgendada);
+
+          if (
+            dataAgendada.getDate() === dataAtual.getDate() &&
+            dataAgendada.getMonth() === dataAtual.getMonth() &&
+            dataAgendada.getFullYear() === dataAtual.getFullYear()
+          ) {
+            todayAppointments.push(item);
+          } else if (dataAgendada < dataAtual) {
+            allDoneAppointments.push(item);
+          } else {
+            scheduledAppointments.push(item);
+          }
+        });
+
+        todayAppointments.sort((a, b) => {
+          const horaA = new Date(a.dataHoraAgendada).getTime();
+          const horaB = new Date(b.dataHoraAgendada).getTime();
+          return horaA - horaB;
+        });
+
+        allDoneAppointments.sort((a, b) => {
+          const dataA = new Date(a.dataHoraAgendada).getTime();
+          const dataB = new Date(b.dataHoraAgendada).getTime();
+          return dataB - dataA;
+        });
+
+        scheduledAppointments.sort((a, b) => {
+          const dataA = new Date(a.dataHoraAgendada).getTime();
+          const dataB = new Date(b.dataHoraAgendada).getTime();
+          return dataA - dataB;
+        });
+
         setAppointments(consultasComDadosDoMedico);
+        setTodayAppointments(todayAppointments);
+        setAllDoneAppointments(allDoneAppointments);
+        setScheduledAppointments(scheduledAppointments);
       }
     };
 
@@ -117,56 +152,6 @@ const Appointments = ({ navigation }) => {
     padding: 20,
     margin: 10,
     height: 680,
-  };
-
-  const addPatient = async (
-    firstName,
-    middleName,
-    lastName,
-    gender,
-    birthdate
-  ) => {
-    const accessToken = await getAuthToken();
-    const patientData = {
-      resourceType: "Patient",
-      active: true,
-      name: [
-        {
-          use: "official",
-          family: lastName,
-          given: [firstName, middleName],
-        },
-      ],
-      telecom: [
-        {
-          system: "phone",
-          value: "(11) 99988-7766",
-          use: "mobile",
-          rank: 1,
-        },
-      ],
-      gender: gender.toLowerCase() == "masculino" ? "male" : "female",
-      birthDate: converterDataParaFormatoISO(birthdate),
-      address: [
-        {
-          use: "home",
-          type: "both",
-          text: "534 Erewhon St PeasantVille, Rainbow, Vic  3999",
-          line: ["534 Erewhon St"],
-          city: "PleasantVille",
-          district: "Rainbow",
-          state: "Vic",
-          postalCode: "3999",
-          period: {
-            start: "1974-12-25",
-          },
-        },
-      ],
-    };
-    await postPatient(accessToken, patientData);
-    const result = await getPatients(accessToken);
-    setPatients(result);
-    hideModal();
   };
 
   return (
@@ -189,15 +174,23 @@ const Appointments = ({ navigation }) => {
                 onPress={() => hideModal()}
                 style={{ position: "absolute", top: 0, right: 0 }}
               />
-              <Prescription appointment={selectedAppointment} />
+              {shouldAddPrescription && (
+                <Prescription
+                  appointment={selectedAppointment}
+                  closeModal={hideModal}
+                />
+              )}
+              {shouldAddCondition && (
+                <Condition
+                  appointment={selectedAppointment}
+                  closeModal={hideModal}
+                />
+              )}
             </>
           </Modal>
         </Portal>
         <View style={styles.container}>
-          <ScrollView
-            contentContainerStyle={styles.scrollContainer}
-            showsVerticalScrollIndicator={false}
-          >
+          <View style={styles.scrollContainer}>
             <StatusBar style="light" />
             <View style={styles.header}>
               <Text style={styles.title}>Health Stash</Text>
@@ -206,7 +199,7 @@ const Appointments = ({ navigation }) => {
                 style={styles.image}
               />
             </View>
-            {!appointments && (
+            {todayAppointments?.length === 0 && (
               <View
                 style={{
                   marginTop: 120,
@@ -219,82 +212,195 @@ const Appointments = ({ navigation }) => {
                 </Text>
               </View>
             )}
-            {appointments && (
+            {todayAppointments?.length > 0 && (
               <>
-                <Text style={styles.subtitle}>Consultas agendadas</Text>
-                {appointments.map((appointment, index) => (
-                  <Card
-                    key={index}
-                    style={styles.card}
-                    onPress={
-                      userType !== "patient"
-                        ? () => {
-                            setSelectedAppointment(appointment);
-                            showModal();
-                          }
-                        : null
-                    }
-                  >
-                    <Card.Content>
-                      <Text style={styles.appointmentDate}>
-                        {formatarDataHoraParaBR(appointment.dataHoraAgendada)}
-                      </Text>
+                <Text style={styles.subtitle}>Consultas do dia</Text>
+                <Text style={styles.quantity}>
+                  Quantidade de pacientes: {todayAppointments.length}
+                </Text>
 
-                      {userType === "patient" && (
-                        <>
-                          <Text>
-                            Médico: {appointment.medico.name[0].given[0]}{" "}
-                            {appointment.medico.name[0].family}
-                          </Text>
-                          <Text>
-                            Especialidade:{" "}
-                            {appointment.medico.qualification[0].code.text}
-                          </Text>
-                          <Text>
-                            Telefone: {appointment.medico.telecom[0].value}
-                          </Text>
-                        </>
+                <ScrollView
+                  horizontal={true}
+                  pagingEnabled
+                  showsHorizontalScrollIndicator={false}
+                >
+                  {todayAppointments?.map((appointment, index) => (
+                    <Card key={index} style={styles.card}>
+                      <Badge style={{ margin: 8, backgroundColor: "#004460" }}>
+                        {index + 1}
+                      </Badge>
+                      <Card.Content style={{ marginTop: -30, marginBottom: 8 }}>
+                        <Text style={styles.appointmentDate}>
+                          {formatarDataHoraParaBR(
+                            appointment?.dataHoraAgendada
+                          )}
+                        </Text>
+
+                        {userType === "patient" && (
+                          <>
+                            <Text>
+                              Médico: {appointment?.medico.name[0].given[0]}{" "}
+                              {appointment?.medico.name[0].family}
+                            </Text>
+                            <Text>
+                              Especialidade:{" "}
+                              {appointment?.medico.qualification[0].code.text}
+                            </Text>
+                            <Text>
+                              Telefone: {appointment?.medico.telecom[0].value}
+                            </Text>
+                          </>
+                        )}
+                        {userType === "practitioner" && (
+                          <>
+                            <Text style={styles.description}>
+                              Paciente:{" "}
+                              {appointment?.paciente.name[0].given.join(" ")}{" "}
+                              {appointment?.paciente.name[0].family}
+                            </Text>
+                            <Text>Motivo: {appointment?.motivo}</Text>
+                            <Text>
+                              Data de nascimento:{" "}
+                              {formatarDataParaBR(
+                                appointment?.paciente.birthDate
+                              )}
+                            </Text>
+                            <Text>
+                              Telefone: {appointment?.paciente.telecom[0].value}
+                            </Text>
+                          </>
+                        )}
+                      </Card.Content>
+                      {userType !== "patient" && (
+                        <Card.Actions>
+                          <Button
+                            style={{
+                              backgroundColor: "#004460",
+                              borderWidth: 0,
+                            }}
+                            theme={{ colors: { primary: "#fff" } }}
+                            onPress={() => {
+                              setSelectedAppointment(appointment);
+                              setShouldAddCondition(true);
+                              setShouldAddPrescription(false);
+                              showModal();
+                            }}
+                          >
+                            Diagnóstico
+                          </Button>
+                          <Button
+                            style={{ backgroundColor: "#004460" }}
+                            theme={{ colors: { primary: "#fff" } }}
+                            onPress={() => {
+                              setSelectedAppointment(appointment);
+                              setShouldAddCondition(false);
+                              setShouldAddPrescription(true);
+                              showModal();
+                            }}
+                          >
+                            Prescrição
+                          </Button>
+                        </Card.Actions>
                       )}
-                      {userType === "practitioner" && (
-                        <>
-                          <Text style={styles.description}>
-                            Paciente:{" "}
-                            {appointment.paciente.name[0].given.join(" ")}{" "}
-                            {appointment.paciente.name[0].family}
-                          </Text>
-                          <Text>Motivo: {appointment.motivo}</Text>
-                          <Text>
-                            Data de nascimento:{" "}
-                            {formatarDataParaBR(appointment.paciente.birthDate)}
-                          </Text>
-                          <Text>
-                            Telefone: {appointment.paciente.telecom[0].value}
-                          </Text>
-                        </>
-                      )}
-                    </Card.Content>
-                  </Card>
-                ))}
+                    </Card>
+                  ))}
+                </ScrollView>
               </>
             )}
-          </ScrollView>
-
-          <Button
-            mode="contained"
-            onPress={() =>
-              userType === "patient"
-                ? navigation.navigate("Médicos")
-                : userType === "practitioner"
-                ? navigation.navigate("Pacientes")
-                : showModal()
-            }
-            style={styles.addButton}
-            textColor="#004460"
+          </View>
+          <View
+            style={{
+              alignItems: "flex-start",
+              justifyContent: "center",
+              width: "100%",
+              flex: 1,
+              marginHorizontal: 16,
+            }}
           >
-            {userType === "practitioner"
-              ? "Agendar retorno para paciente"
-              : "Agendar consulta"}
-          </Button>
+            {userType === "practitioner" && (
+              <>
+                <TouchableOpacity
+                  onPress={() =>
+                    navigation.navigate("Consultas agendadas", {
+                      scheduledAppointments,
+                    })
+                  }
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text
+                    variant="labelLarge"
+                    style={{ fontFamily: "poppins-regular", color: "#fff" }}
+                  >
+                    Consultas agendadas
+                  </Text>
+                  <Avatar.Icon
+                    icon="chevron-right"
+                    color="pink"
+                    backgroundColor="transparent"
+                    size={48}
+                    style={{ marginLeft: -12 }}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() =>
+                    navigation.navigate("Consultas realizadas", {
+                      allDoneAppointments,
+                    })
+                  }
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text
+                    variant="labelLarge"
+                    style={{ fontFamily: "poppins-regular", color: "#fff" }}
+                  >
+                    Consultas realizadas
+                  </Text>
+                  <Avatar.Icon
+                    icon="chevron-right"
+                    color="pink"
+                    backgroundColor="transparent"
+                    size={48}
+                    style={{ marginLeft: -12 }}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() =>
+                    userType === "patient"
+                      ? navigation.navigate("Médicos")
+                      : userType === "practitioner"
+                      ? navigation.navigate("Pacientes")
+                      : showModal()
+                  }
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text
+                    variant="labelLarge"
+                    style={{ fontFamily: "poppins-regular", color: "#fff" }}
+                  >
+                    {userType === "practitioner"
+                      ? "Agendar retorno para pacientes"
+                      : "Agendar consulta"}
+                  </Text>
+                  <Avatar.Icon
+                    icon="chevron-right"
+                    color="pink"
+                    backgroundColor="transparent"
+                    size={48}
+                    style={{ marginLeft: -12 }}
+                  />
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
         </View>
       </PaperProvider>
     </KeyboardAvoidingView>
@@ -324,10 +430,10 @@ const styles = StyleSheet.create({
     color: "white",
   },
   subtitle: {
-    fontFamily: "poppins-regular",
-    fontSize: 24,
+    fontFamily: "poppins-bold",
+    fontSize: 30,
     color: "white",
-    marginBottom: 40,
+    marginBottom: 50,
     textAlign: "center",
     fontWeight: "bold",
   },
@@ -335,7 +441,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   card: {
-    marginBottom: 16,
+    width: 358,
   },
   patientName: {
     fontSize: 18,
@@ -353,6 +459,13 @@ const styles = StyleSheet.create({
   description: {
     marginBottom: 12,
     fontFamily: "poppins-bold",
+  },
+  quantity: {
+    marginBottom: 24,
+    color: "white",
+    fontSize: 16,
+    textAlign: "center",
+    fontFamily: "poppins-regular",
   },
 });
 

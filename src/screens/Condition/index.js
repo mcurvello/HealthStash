@@ -6,16 +6,40 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Button, Surface, Title, Text } from "react-native-paper";
 import { Image } from "react-native";
-import { getAuthToken, postMedicationRequest } from "../../services/api/api.js";
-import { formatarDataParaBR } from "../../utils/date.js";
+import {
+  getAuthToken,
+  getPractitioners,
+  postCondition,
+  postPractitioner,
+} from "../../services/api/api.js";
+import {
+  formatarDataParaBR,
+  converterDataParaFormatoISO,
+} from "../../utils/date.js";
+import { AuthenticationContext } from "../../services/authentication/AuthenticationContext/index.js";
 
-const Prescription = ({ appointment, closeModal }) => {
-  const [medication, setMedication] = useState("");
-  const [type, setType] = useState("");
-  const [quantity, setQuantity] = useState();
+const Condition = ({ appointment, closeModal }) => {
+  useEffect(() => {
+    const fetchData = async () => {
+      const accessToken = await getAuthToken();
+      if (accessToken) {
+        const result = await getPractitioners(accessToken);
+        setPractitioners(result);
+      }
+    };
+
+    fetchData();
+  }, []);
+  const [practitioners, setPractitioners] = useState();
+
+  const [visible, setVisible] = useState(false);
+  const [description, setDescription] = useState("");
+
+  const showModal = () => setVisible(true);
+  const hideModal = () => setVisible(false);
 
   const date = new Date();
   const formattedDate = formatarDataParaBR(date);
@@ -25,51 +49,54 @@ const Prescription = ({ appointment, closeModal }) => {
 
   const formattedTime = `${hour}:${minutes}`;
 
-  const addPrescription = async (
-    patientId,
-    patientName,
-    practitionerId,
-    practitionerName,
-    type,
-    quantity,
-    medication
-  ) => {
+  const addCondition = async (patientId, practitionerId, description) => {
     const accessToken = await getAuthToken();
 
-    const prescriptionData = {
-      resourceType: "MedicationRequest",
-      status: "stopped",
-      intent: "order",
-      priority: "routine",
-      medicationCodeableConcept: {
-        id: "865fceb1-ad0c-4102-aead-26ca25c77b09",
+    const conditionData = {
+      resourceType: "Condition",
+      id: "example",
+      text: {
+        status: "generated",
+        div: "<div>Severe burn of left ear (Date: 24-May 2012)</div>",
+      },
+      clinicalStatus: {
         coding: [
           {
-            system: "http://openmrs.org",
-            code: "cedf8fc4–6fc9–11e7–9b2b-c4d98716fd91",
-            display: medication,
+            system: "http://terminology.hl7.org/CodeSystem/condition-clinical",
+            code: "active",
           },
         ],
       },
-      subject: {
-        id: patientId,
-        reference: `Patient/${patientId}`,
-        display: patientName,
+      verificationStatus: {
+        coding: [
+          {
+            system:
+              "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+            code: "confirmed",
+          },
+        ],
       },
-
-      recorder: {
-        id: practitionerId,
-        reference: `Practitioner/${practitionerId}`,
-        display: practitionerName,
-      },
-      dispenseRequest: {
-        quantity: {
-          value: Number(quantity),
-          unit: type,
+      category: [
+        {
+          coding: [
+            {
+              system:
+                "http://terminology.hl7.org/CodeSystem/condition-category",
+              code: "encounter-diagnosis",
+              display: "Encounter Diagnosis",
+            },
+          ],
         },
+      ],
+      code: {
+        text: description,
       },
+      subject: {
+        reference: `Patient/${patientId}`,
+      },
+      onsetString: `Practitioner/${practitionerId}`,
     };
-    await postMedicationRequest(accessToken, prescriptionData);
+    await postCondition(accessToken, conditionData);
   };
 
   return (
@@ -85,7 +112,7 @@ const Prescription = ({ appointment, closeModal }) => {
             resizeMethod="scale"
             source={require("../../../assets/logo2.png")}
           />
-          <Title style={styles.title}>Prescrição do paciente</Title>
+          <Title style={styles.title}>Diagnóstico do paciente</Title>
           <View style={styles.information}>
             <View flex={0.48}>
               <Text variant="labelLarge">Data</Text>
@@ -111,58 +138,33 @@ const Prescription = ({ appointment, closeModal }) => {
           </View>
 
           <View style={styles.label}>
-            <Text variant="labelLarge">Medicamento</Text>
-            <Surface elevation={5} style={styles.surface}>
+            <Text variant="labelLarge">Diagnóstico</Text>
+            <Surface elevation={5} style={styles.textArea}>
               <TextInput
-                onChangeText={setMedication}
-                value={medication}
-                placeholder="Digite aqui um medicamento para o paciente"
+                multiline={true}
+                numberOfLines={10}
+                onChangeText={setDescription}
+                value={description}
+                height={150}
+                placeholder="Digite aqui o diagnóstico do paciente"
               />
             </Surface>
           </View>
-          <View style={styles.label}>
-            <Text variant="labelLarge">Tipo do medicamento</Text>
-            <Surface elevation={5} style={styles.surface}>
-              <TextInput
-                onChangeText={setType}
-                value={type}
-                placeholder="Digite aqui o tipo: comprimido, gotas, etc."
-              />
-            </Surface>
-          </View>
-          <View style={styles.label}>
-            <Text variant="labelLarge">Quantidade</Text>
-            <Surface elevation={5} style={styles.surface}>
-              <TextInput
-                onChangeText={setQuantity}
-                value={quantity}
-                placeholder="Digite aqui a quantidade"
-              />
-            </Surface>
-          </View>
+
           <Button
             mode="elevated"
             onPress={() => {
-              addPrescription(
+              addCondition(
                 appointment.paciente.id,
-                appointment.paciente.name[0].given.join(" ") +
-                  " " +
-                  appointment.paciente.name[0].family,
                 appointment.medico.id,
-                appointment.medico.name[0].given.join(" ") +
-                  " " +
-                  appointment.medico.name[0].family,
-                type,
-                quantity,
-                medication
+                description
               );
-
               closeModal();
             }}
             style={styles.addButton}
             textColor="#004460"
           >
-            Enviar prescrição
+            Enviar diagnóstico
           </Button>
         </View>
       </TouchableWithoutFeedback>
@@ -184,7 +186,6 @@ const styles = StyleSheet.create({
   },
   addButton: {
     backgroundColor: "white",
-    marginTop: 24,
   },
   information: {
     flexDirection: "row",
@@ -203,8 +204,8 @@ const styles = StyleSheet.create({
   },
   textArea: {
     padding: 8,
-    paddingTop: 40,
-    height: 180,
+    paddingTop: 0,
+    height: 170,
     width: "100%",
     alignItems: "flex-start",
     justifyContent: "center",
@@ -216,4 +217,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Prescription;
+export default Condition;

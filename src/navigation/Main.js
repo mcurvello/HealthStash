@@ -10,6 +10,9 @@ import { AuthenticationContext } from "../services/authentication/Authentication
 import Appointments from "../screens/Appointments";
 import Prescriptions from "../screens/Prescriptions";
 import { createStackNavigator } from "@react-navigation/stack";
+import AllAppointments from "../screens/ScheduledAppointments";
+import ScheduledAppointments from "../screens/ScheduledAppointments";
+import AllDoneAppointments from "../screens/AllDoneAppointmentes";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -52,6 +55,28 @@ const PrescriptionsStack = () => {
   );
 };
 
+const AppointmentsStack = () => {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen
+        name="Consultas do dia"
+        component={Appointments}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Consultas agendadas"
+        component={ScheduledAppointments}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Consultas realizadas"
+        component={AllDoneAppointments}
+        options={{ headerShown: false }}
+      />
+    </Stack.Navigator>
+  );
+};
+
 export const Main = () => {
   const { userType } = useContext(AuthenticationContext);
 
@@ -64,7 +89,7 @@ export const Main = () => {
       {userType !== "practitioner" && (
         <Tab.Screen name="Médicos" component={Practitioners} />
       )}
-      <Tab.Screen name="Consultas" component={Appointments} />
+      <Tab.Screen name="Consultas" component={AppointmentsStack} />
       {userType === "patient" && (
         <Tab.Screen name="Prescrições" component={PrescriptionsStack} />
       )}
