@@ -1,4 +1,5 @@
 import {
+  Image,
   View,
   Text,
   ScrollView,
@@ -13,22 +14,15 @@ import {
   Modal,
   PaperProvider,
   Portal,
-  TextInput,
-  Title,
 } from "react-native-paper";
 import { StatusBar } from "expo-status-bar";
-import { Image } from "react-native";
-import { getAuthToken, getPatients, postPatient } from "../../services/api/api";
-import {
-  formatarDataParaBR,
-  converterDataParaFormatoISO,
-} from "../../utils/date";
+import { getAuthToken, getPatients } from "../../services/api/api";
+import { formatarDataParaBR } from "../../utils/date";
 import { AuthenticationContext } from "../../services/authentication/AuthenticationContext";
-import { Map } from "../Map";
-import Prescription from "../Prescription";
 import Schedule from "../Schedule";
+import NewPatient from "../NewPatient";
 
-const Patients = ({ navigation }) => {
+const Patients = () => {
   const [patients, setPatients] = useState();
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [shouldAddPatient, setShouldAddPatient] = useState(false);
@@ -44,15 +38,9 @@ const Patients = ({ navigation }) => {
     };
 
     fetchData();
-  }, []);
+  }, [patients]);
 
   const [visible, setVisible] = useState(false);
-  const [firstName, setFirstName] = useState("");
-  const [middleName, setMiddleName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [birthdate, setBirthdate] = useState("");
-  const [gender, setGender] = useState("");
-  const [address, setAddredss] = useState("");
 
   const showModal = () => setVisible(true);
   const hideModal = () => setVisible(false);
@@ -61,53 +49,6 @@ const Patients = ({ navigation }) => {
     padding: 20,
     margin: 10,
     height: 700,
-  };
-
-  const addPatient = async (
-    firstName,
-    middleName,
-    lastName,
-    gender,
-    birthdate,
-    address
-  ) => {
-    const accessToken = await getAuthToken();
-    const patientData = {
-      resourceType: "Patient",
-      active: true,
-      name: [
-        {
-          use: "official",
-          family: lastName,
-          given: [firstName, middleName],
-        },
-      ],
-      telecom: [
-        {
-          system: "phone",
-          value: "(11) 99988-7766",
-          use: "mobile",
-          rank: 1,
-        },
-        {
-          system: "email",
-          value: "joao@teste.com",
-        },
-      ],
-      gender: gender.toLowerCase() == "masculino" ? "male" : "female",
-      birthDate: converterDataParaFormatoISO(birthdate),
-      address: [
-        {
-          use: "home",
-          type: "both",
-          text: address,
-        },
-      ],
-    };
-    await postPatient(accessToken, patientData);
-    const result = await getPatients(accessToken);
-    setPatients(result);
-    hideModal();
   };
 
   return (
@@ -124,75 +65,14 @@ const Patients = ({ navigation }) => {
           >
             {shouldAddPatient && (
               <>
-                <Title
-                  style={{
-                    textAlign: "center",
-                    marginBottom: 24,
-                    fontWeight: "bold",
-                    fontSize: 24,
-                  }}
-                >
-                  Adicionar um paciente
-                </Title>
-                <TextInput
-                  value={firstName}
-                  onChangeText={(text) => setFirstName(text)}
-                  placeholder="Nome"
-                  mode="outlined"
-                  style={{ marginBottom: 12 }}
+                <IconButton
+                  icon="close"
+                  iconColor="black"
+                  size={20}
+                  onPress={() => hideModal()}
+                  style={{ position: "absolute", top: 0, right: 0 }}
                 />
-                <TextInput
-                  value={middleName}
-                  onChangeText={(text) => setMiddleName(text)}
-                  placeholder="Primeiro sobrenome"
-                  mode="outlined"
-                  style={{ marginBottom: 12 }}
-                />
-                <TextInput
-                  value={lastName}
-                  onChangeText={(text) => setLastName(text)}
-                  placeholder="Último sobrenome"
-                  mode="outlined"
-                  style={{ marginBottom: 12 }}
-                />
-                <TextInput
-                  value={birthdate}
-                  onChangeText={(text) => setBirthdate(text)}
-                  placeholder="Data de nascimento"
-                  mode="outlined"
-                  style={{ marginBottom: 12 }}
-                />
-                <TextInput
-                  value={gender}
-                  onChangeText={(text) => setGender(text)}
-                  placeholder="Gênero"
-                  mode="outlined"
-                  style={{ marginBottom: 12 }}
-                />
-                <TextInput
-                  value={address}
-                  onChangeText={(text) => setAddredss(text)}
-                  placeholder="Endereço"
-                  mode="outlined"
-                  style={{ marginBottom: 12 }}
-                />
-                <Button
-                  mode="elevated"
-                  onPress={() =>
-                    addPatient(
-                      firstName,
-                      middleName,
-                      lastName,
-                      gender,
-                      birthdate,
-                      address
-                    )
-                  }
-                  style={styles.addButton}
-                  textColor="#004460"
-                >
-                  Adicionar
-                </Button>
+                <NewPatient closeModal={hideModal} />
               </>
             )}
             {!shouldAddPatient && userType === "practitioner" && (
