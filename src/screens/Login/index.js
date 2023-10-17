@@ -62,8 +62,11 @@ export const Login = ({ navigation }) => {
               <TextInput
                 mode="outlined"
                 placeholder="E-mail"
+                theme={{ colors: { primary: "white" } }}
                 value={document}
-                contentStyle={{ fontFamily: "poppins-regular" }}
+                contentStyle={{
+                  fontFamily: "poppins-regular",
+                }}
                 placeholderTextColor="#fff"
                 textColor="#fff"
                 right={<TextInput.Icon iconColor="#fff" icon="account" />}
@@ -81,6 +84,7 @@ export const Login = ({ navigation }) => {
               />
               <TextInput
                 mode="outlined"
+                theme={{ colors: { primary: "white" } }}
                 placeholder="Senha"
                 value={password}
                 placeholderTextColor="#fff"

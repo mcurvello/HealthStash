@@ -20,7 +20,7 @@ import {
 } from "../../utils/date.js";
 import { AuthenticationContext } from "../../services/authentication/AuthenticationContext/index.js";
 
-const Prescription = ({ patient }) => {
+const Prescription = ({ appointment }) => {
   const { userType } = useContext(AuthenticationContext);
 
   useEffect(() => {
@@ -145,8 +145,8 @@ const Prescription = ({ patient }) => {
             <Text variant="labelLarge">Paciente</Text>
             <Surface style={styles.surface}>
               <Text>
-                {patient.resource.name[0].given.join(" ")}{" "}
-                {patient.resource.name[0].family}
+                {appointment.paciente.name[0].given.join(" ")}{" "}
+                {appointment.paciente.name[0].family}
               </Text>
             </Surface>
           </View>
@@ -154,14 +154,16 @@ const Prescription = ({ patient }) => {
             <View flex={0.48}>
               <Text variant="labelLarge">Data de nascimento</Text>
               <Surface style={styles.surface}>
-                <Text>{formatarDataParaBR(patient.resource.birthDate)}</Text>
+                <Text>
+                  {formatarDataParaBR(appointment.paciente.birthDate)}
+                </Text>
               </Surface>
             </View>
             <View flex={0.48}>
               <Text variant="labelLarge">Gênero</Text>
               <Surface style={styles.surface}>
                 <Text>
-                  {patient.resource.gender === "male"
+                  {appointment.paciente.gender === "male"
                     ? "Masculino"
                     : "Feminino"}
                 </Text>

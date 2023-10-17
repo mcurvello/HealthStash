@@ -9,6 +9,7 @@ import React, { useContext, useEffect, useState } from "react";
 import {
   Button,
   Card,
+  IconButton,
   Modal,
   PaperProvider,
   Portal,
@@ -31,6 +32,7 @@ import {
   formatarDataParaBR,
 } from "../../utils/date";
 import { AuthenticationContext } from "../../services/authentication/AuthenticationContext";
+import Prescription from "../Prescription";
 
 const Appointments = ({ navigation }) => {
   const { userType, userData } = useContext(AuthenticationContext);
@@ -106,12 +108,7 @@ const Appointments = ({ navigation }) => {
   }, [appointments]);
 
   const [visible, setVisible] = useState(false);
-  const [firstName, setFirstName] = useState("");
-  const [middleName, setMiddleName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [birthdate, setBirthdate] = useState("");
-  const [gender, setGender] = useState("");
-  const [address, setAddredss] = useState("");
+  const [selectedAppointment, setSelectedAppointment] = useState();
 
   const showModal = () => setVisible(true);
   const hideModal = () => setVisible(false);
@@ -184,68 +181,16 @@ const Appointments = ({ navigation }) => {
             onDismiss={hideModal}
             contentContainerStyle={containerStyle}
           >
-            <Title
-              style={{
-                textAlign: "center",
-                marginBottom: 24,
-                fontWeight: "bold",
-                fontSize: 24,
-              }}
-            >
-              Adicionar um paciente
-            </Title>
-            <TextInput
-              value={firstName}
-              onChangeText={(text) => setFirstName(text)}
-              placeholder="Nome"
-              mode="outlined"
-              style={{ marginBottom: 12 }}
-            />
-            <TextInput
-              value={middleName}
-              onChangeText={(text) => setMiddleName(text)}
-              placeholder="Primeiro sobrenome"
-              mode="outlined"
-              style={{ marginBottom: 12 }}
-            />
-            <TextInput
-              value={lastName}
-              onChangeText={(text) => setLastName(text)}
-              placeholder="Último sobrenome"
-              mode="outlined"
-              style={{ marginBottom: 12 }}
-            />
-            <TextInput
-              value={birthdate}
-              onChangeText={(text) => setBirthdate(text)}
-              placeholder="Data de nascimento"
-              mode="outlined"
-              style={{ marginBottom: 12 }}
-            />
-            <TextInput
-              value={gender}
-              onChangeText={(text) => setGender(text)}
-              placeholder="Gênero"
-              mode="outlined"
-              style={{ marginBottom: 12 }}
-            />
-            <TextInput
-              value={address}
-              onChangeText={(text) => setAddredss(text)}
-              placeholder="Endereço"
-              mode="outlined"
-              style={{ marginBottom: 12 }}
-            />
-            <Button
-              mode="elevated"
-              onPress={() =>
-                addPatient(firstName, middleName, lastName, gender, birthdate)
-              }
-              style={styles.addButton}
-              textColor="#004460"
-            >
-              Adicionar
-            </Button>
+            <>
+              <IconButton
+                icon="close"
+                iconColor="black"
+                size={20}
+                onPress={() => hideModal()}
+                style={{ position: "absolute", top: 0, right: 0 }}
+              />
+              <Prescription appointment={selectedAppointment} />
+            </>
           </Modal>
         </Portal>
         <View style={styles.container}>
@@ -278,7 +223,18 @@ const Appointments = ({ navigation }) => {
               <>
                 <Text style={styles.subtitle}>Consultas agendadas</Text>
                 {appointments.map((appointment, index) => (
-                  <Card key={index} style={styles.card} onPress={showModal}>
+                  <Card
+                    key={index}
+                    style={styles.card}
+                    onPress={
+                      userType !== "patient"
+                        ? () => {
+                            setSelectedAppointment(appointment);
+                            showModal();
+                          }
+                        : null
+                    }
+                  >
                     <Card.Content>
                       <Text style={styles.appointmentDate}>
                         {formatarDataHoraParaBR(appointment.dataHoraAgendada)}

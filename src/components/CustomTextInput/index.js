@@ -16,6 +16,7 @@ function CustomTextInput({
       placeholder={placeholder}
       placeholderTextColor={color || "#fff"}
       mode="outlined"
+      theme={{ colors: { primary: "white" } }}
       value={value}
       right={
         icon && (
