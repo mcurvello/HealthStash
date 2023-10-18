@@ -12,6 +12,7 @@ import { Container } from "./styles";
 import {
   Avatar,
   Button,
+  HelperText,
   SegmentedButtons,
   Text,
   TextInput,
@@ -22,7 +23,7 @@ import { StatusBar } from "expo-status-bar";
 export const Login = ({ navigation }) => {
   const [document, setDocument] = useState("");
   const [password, setPassword] = useState("");
-  const [profile, setProfile] = useState("patient");
+  const [profile, setProfile] = useState("");
   const [secureTextEntry, setSecureTextEntry] = useState(true);
 
   const { onLogin, getUserData } = useContext(AuthenticationContext);
@@ -138,13 +139,23 @@ export const Login = ({ navigation }) => {
                   buttons={[
                     { label: "Paciente", value: "patient" },
                     { label: "Médico", value: "practitioner" },
-                    { label: "Clínica", value: "clinic" },
                   ]}
                 />
               </View>
-
+              <HelperText
+                type="error"
+                visible={!profile}
+                style={{
+                  fontFamily: "poppins-regular",
+                  fontSize: 14,
+                  color: "pink",
+                }}
+              >
+                É necessário selecionar um tipo de usuário
+              </HelperText>
               <Button
                 mode="contained-tonal"
+                disabled={!profile}
                 buttonColor="#fff"
                 textColor="#0083C5"
                 style={{

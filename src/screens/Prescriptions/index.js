@@ -1,3 +1,4 @@
+import React, { useContext, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -5,156 +6,44 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
 } from "react-native";
-import React, { useContext, useEffect, useState } from "react";
-import {
-  Button,
-  Card,
-  Modal,
-  PaperProvider,
-  Portal,
-  TextInput,
-  Title,
-} from "react-native-paper";
+import { Card, PaperProvider } from "react-native-paper";
 import { StatusBar } from "expo-status-bar";
 import { Image } from "react-native";
-import {
-  getAppointments,
-  getAuthToken,
-  getPatients,
-  getPractitionerById,
-  postPatient,
-} from "../../services/api/api";
-import {
-  formatarDataParaBR,
-  converterDataParaFormatoISO,
-  formatarDataHoraParaBR,
-} from "../../utils/date";
+import { getAuthToken, getMedicationRequest } from "../../services/api/api";
+import { formatarDataHoraParaBR, formatarDataParaBR } from "../../utils/date";
 import { AuthenticationContext } from "../../services/authentication/AuthenticationContext";
 
 const Prescriptions = ({ navigation }) => {
-  const { userType, userData } = useContext(AuthenticationContext);
+  const { userData } = useContext(AuthenticationContext);
 
-  const [patients, setPatients] = useState();
-  const [appointments, setAppointments] = useState();
+  const [prescriptions, setPrescriptions] = useState();
 
   useEffect(() => {
     const fetchData = async () => {
       const accessToken = await getAuthToken();
       if (accessToken) {
-        const result = await getAppointments(accessToken);
+        const result = await getMedicationRequest(accessToken);
 
-        const appointmentsPatient = result.entry.filter((entry) => {
-          const appointment = entry.resource;
-          if (appointment.resourceType === "Appointment") {
-            if (Array.isArray(appointment.participant)) {
-              return appointment.participant.some((participant) => {
-                return participant.actor.reference === `Patient/${userData.id}`;
-              });
-            }
-          }
-          return false;
-        });
-
-        const consultasComDadosDoMedico = await Promise.all(
-          appointmentsPatient.map(async (consulta) => {
-            const appointment = consulta.resource;
-            const practitionerReference = appointment.participant.find(
-              (participant) =>
-                participant.actor.reference.startsWith("Practitioner/")
-            )?.actor.reference;
-
-            const practitionerId = practitionerReference
-              ? practitionerReference.split("/")[1]
-              : null;
-
-            if (practitionerId) {
-              const practitioner = await getPractitionerById(
-                accessToken,
-                practitionerId
-              );
-              return {
-                dataHoraAgendada: appointment.start,
-                medico: practitioner,
-              };
-            }
-
-            return null;
-          })
+        const patientData = result.entry.filter(
+          (entry) => entry.resource.subject.id === userData.id
         );
+        const patientInfo = patientData.map((entry) => ({
+          medicationRequestId: entry.resource.id,
+          date: formatarDataParaBR(entry.resource.meta.lastUpdated),
+          medicationName:
+            entry.resource.medicationCodeableConcept.coding[0].display,
+          status: entry.resource.status,
+          recorder: entry.resource.recorder.display,
+          dispenseValue: entry.resource.dispenseRequest.quantity.value,
+          dispenseUnit: entry.resource.dispenseRequest.quantity.unit,
+        }));
 
-        setAppointments(consultasComDadosDoMedico);
+        setPrescriptions(patientInfo);
       }
     };
 
     fetchData();
-  }, [appointments]);
-
-  const [visible, setVisible] = useState(false);
-  const [firstName, setFirstName] = useState("");
-  const [middleName, setMiddleName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [birthdate, setBirthdate] = useState("");
-  const [gender, setGender] = useState("");
-  const [address, setAddredss] = useState("");
-
-  const showModal = () => setVisible(true);
-  const hideModal = () => setVisible(false);
-  const containerStyle = {
-    backgroundColor: "white",
-    padding: 20,
-    margin: 10,
-    height: 680,
-  };
-
-  const addPatient = async (
-    firstName,
-    middleName,
-    lastName,
-    gender,
-    birthdate
-  ) => {
-    const accessToken = await getAuthToken();
-    const patientData = {
-      resourceType: "Patient",
-      active: true,
-      name: [
-        {
-          use: "official",
-          family: lastName,
-          given: [firstName, middleName],
-        },
-      ],
-      telecom: [
-        {
-          system: "phone",
-          value: "(11) 99988-7766",
-          use: "mobile",
-          rank: 1,
-        },
-      ],
-      gender: gender.toLowerCase() == "masculino" ? "male" : "female",
-      birthDate: converterDataParaFormatoISO(birthdate),
-      address: [
-        {
-          use: "home",
-          type: "both",
-          text: "534 Erewhon St PeasantVille, Rainbow, Vic  3999",
-          line: ["534 Erewhon St"],
-          city: "PleasantVille",
-          district: "Rainbow",
-          state: "Vic",
-          postalCode: "3999",
-          period: {
-            start: "1974-12-25",
-          },
-        },
-      ],
-    };
-    await postPatient(accessToken, patientData);
-    const result = await getPatients(accessToken);
-    setPatients(result);
-    hideModal();
-  };
+  }, [prescriptions]);
 
   return (
     <KeyboardAvoidingView
@@ -162,90 +51,21 @@ const Prescriptions = ({ navigation }) => {
       style={{ flex: 1 }}
     >
       <PaperProvider>
-        <Portal>
-          <Modal
-            visible={visible}
-            onDismiss={hideModal}
-            contentContainerStyle={containerStyle}
-          >
-            <Title
-              style={{
-                textAlign: "center",
-                marginBottom: 24,
-                fontWeight: "bold",
-                fontSize: 24,
-              }}
-            >
-              Adicionar um paciente
-            </Title>
-            <TextInput
-              value={firstName}
-              onChangeText={(text) => setFirstName(text)}
-              placeholder="Nome"
-              mode="outlined"
-              style={{ marginBottom: 12 }}
-            />
-            <TextInput
-              value={middleName}
-              onChangeText={(text) => setMiddleName(text)}
-              placeholder="Primeiro sobrenome"
-              mode="outlined"
-              style={{ marginBottom: 12 }}
-            />
-            <TextInput
-              value={lastName}
-              onChangeText={(text) => setLastName(text)}
-              placeholder="Último sobrenome"
-              mode="outlined"
-              style={{ marginBottom: 12 }}
-            />
-            <TextInput
-              value={birthdate}
-              onChangeText={(text) => setBirthdate(text)}
-              placeholder="Data de nascimento"
-              mode="outlined"
-              style={{ marginBottom: 12 }}
-            />
-            <TextInput
-              value={gender}
-              onChangeText={(text) => setGender(text)}
-              placeholder="Gênero"
-              mode="outlined"
-              style={{ marginBottom: 12 }}
-            />
-            <TextInput
-              value={address}
-              onChangeText={(text) => setAddredss(text)}
-              placeholder="Endereço"
-              mode="outlined"
-              style={{ marginBottom: 12 }}
-            />
-            <Button
-              mode="elevated"
-              onPress={() =>
-                addPatient(firstName, middleName, lastName, gender, birthdate)
-              }
-              style={styles.addButton}
-              textColor="#004460"
-            >
-              Adicionar
-            </Button>
-          </Modal>
-        </Portal>
         <View style={styles.container}>
+          <StatusBar style="light" />
+          <View style={styles.header}>
+            <Text style={styles.title}>Health Stash</Text>
+            <Image
+              source={require("../../../assets/logo.png")}
+              style={styles.image}
+            />
+          </View>
+          <Text style={styles.subtitle}>Prescrições médicas</Text>
           <ScrollView
             contentContainerStyle={styles.scrollContainer}
             showsVerticalScrollIndicator={false}
           >
-            <StatusBar style="light" />
-            <View style={styles.header}>
-              <Text style={styles.title}>HealthStash</Text>
-              <Image
-                source={require("../../../assets/logo.png")}
-                style={styles.image}
-              />
-            </View>
-            {!appointments && (
+            {prescriptions?.length === 0 && (
               <View
                 style={{
                   marginTop: 120,
@@ -253,15 +73,34 @@ const Prescriptions = ({ navigation }) => {
                   justifyContent: "center",
                 }}
               >
-                <Text style={styles.subtitle}>
+                <Text
+                  style={{
+                    fontFamily: "poppins-regular",
+                    textAlign: "center",
+                    marginBottom: 24,
+                    fontSize: 24,
+                    color: "white",
+                  }}
+                >
                   Você ainda não possui consultas agendadas
                 </Text>
               </View>
             )}
-            {appointments && (
+            {prescriptions?.length > 0 && (
               <>
-                <Text style={styles.subtitle}>Prescrições médicas</Text>
-                {appointments.map((appointment, index) => (
+                <Text
+                  style={{
+                    fontFamily: "poppins-regular",
+                    textAlign: "center",
+                    marginBottom: 24,
+                    fontSize: 16,
+                    color: "white",
+                  }}
+                >
+                  Para buscar locais para realizar a compra dos medicamentos,
+                  pressione a prescrição
+                </Text>
+                {prescriptions.map((prescription, index) => (
                   <Card
                     key={index}
                     style={styles.card}
@@ -269,16 +108,16 @@ const Prescriptions = ({ navigation }) => {
                   >
                     <Card.Content>
                       <Text style={styles.appointmentDate}>
-                        {formatarDataHoraParaBR(appointment.dataHoraAgendada)}
+                        {prescription.date}
                       </Text>
 
-                      <Text>
-                        Médico: {appointment.medico.name[0].given[0]}{" "}
-                        {appointment.medico.name[0].family}
+                      <Text style={{ marginBottom: 8 }}>
+                        Médico: {prescription.recorder}
                       </Text>
+                      <Text>Medicamento: {prescription.medicationName}</Text>
                       <Text>
-                        Especialidade:{" "}
-                        {appointment.medico.qualification[0].code.text}
+                        Quantidade: {prescription.dispenseValue}{" "}
+                        {prescription.dispenseUnit.toLowerCase()}
                       </Text>
                     </Card.Content>
                   </Card>
@@ -302,6 +141,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     width: "100%",
+    padding: 16,
   },
   image: {
     resizeMode: "contain",
@@ -310,14 +150,15 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 36,
+    fontFamily: "poppins-bold",
     fontWeight: "bold",
     color: "white",
   },
   subtitle: {
-    fontFamily: "poppins-regular",
-    fontSize: 24,
+    fontFamily: "poppins-bold",
+    fontSize: 30,
     color: "white",
-    marginBottom: 40,
+    marginBottom: 16,
     textAlign: "center",
     fontWeight: "bold",
   },
@@ -334,7 +175,7 @@ const styles = StyleSheet.create({
   appointmentDate: {
     fontSize: 18,
     fontWeight: "bold",
-    marginBottom: 16,
+    marginBottom: 8,
   },
   addButton: {
     margin: 16,

@@ -173,6 +173,22 @@ async function postCondition(accessToken, data) {
   }
 }
 
+async function getMedicationRequest(accessToken) {
+  const baseUrl = fhirEndpoint + "MedicationRequest?_count=100";
+
+  try {
+    const response = await axios.get(baseUrl, {
+      headers: getHttpHeader(accessToken),
+    });
+
+    return response?.data;
+  } catch (error) {
+    console.log(
+      "\tError getting medication request data: " + error.response.status
+    );
+  }
+}
+
 async function postMedicationRequest(accessToken, data) {
   try {
     const response = await axios.post(
@@ -209,5 +225,6 @@ export {
   getAppointments,
   postAppointment,
   postCondition,
+  getMedicationRequest,
   postMedicationRequest,
 };

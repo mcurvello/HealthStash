@@ -72,7 +72,16 @@ const ScheduledAppointments = ({ navigation, route }) => {
         <View style={styles.container}>
           <View style={styles.scrollContainer}>
             <StatusBar style="light" />
+
             <View style={styles.header}>
+              <IconButton
+                icon="chevron-left"
+                mode="contained"
+                iconColor="#004460"
+                size={20}
+                onPress={navigation.goBack}
+                style={{ position: "absolute", top: 24, left: -8 }}
+              />
               <Text style={styles.title}>Health Stash</Text>
               <Image
                 source={require("../../../assets/logo.png")}

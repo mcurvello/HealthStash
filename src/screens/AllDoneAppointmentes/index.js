@@ -74,6 +74,14 @@ const AllDoneAppointments = ({ navigation, route }) => {
           <View style={styles.scrollContainer}>
             <StatusBar style="light" />
             <View style={styles.header}>
+              <IconButton
+                icon="chevron-left"
+                mode="contained"
+                iconColor="#004460"
+                size={20}
+                onPress={navigation.goBack}
+                style={{ position: "absolute", top: 24, left: -8 }}
+              />
               <Text style={styles.title}>Health Stash</Text>
               <Image
                 source={require("../../../assets/logo.png")}
@@ -149,37 +157,6 @@ const AllDoneAppointments = ({ navigation, route }) => {
                           </>
                         )}
                       </Card.Content>
-                      {userType !== "patient" && (
-                        <Card.Actions>
-                          <Button
-                            style={{
-                              backgroundColor: "#004460",
-                              borderWidth: 0,
-                            }}
-                            theme={{ colors: { primary: "#fff" } }}
-                            onPress={() => {
-                              setSelectedAppointment(appointment);
-                              setShouldAddCondition(true);
-                              setShouldAddPrescription(false);
-                              showModal();
-                            }}
-                          >
-                            Diagnóstico
-                          </Button>
-                          <Button
-                            style={{ backgroundColor: "#004460" }}
-                            theme={{ colors: { primary: "#fff" } }}
-                            onPress={() => {
-                              setSelectedAppointment(appointment);
-                              setShouldAddCondition(false);
-                              setShouldAddPrescription(true);
-                              showModal();
-                            }}
-                          >
-                            Prescrição
-                          </Button>
-                        </Card.Actions>
-                      )}
                     </Card>
                   ))}
                 </ScrollView>
