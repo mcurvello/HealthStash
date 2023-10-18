@@ -14,7 +14,7 @@ O Health Stash App é uma plataforma que visa simplificar o acompanhamento da sa
 
 ## Sobre o Padrão FHIR
 
-O FHIR (Fast Healthcare Interoperability Resources) é um padrão de interoperabilidade em saúde amplamente adotado pela comunidade médica. Ele não é um produto ou tecnologia da Microsoft, mas sim um padrão desenvolvido pela HL7 (Health Level Seven International) para facilitar a troca de informações de saúde eletrônicas entre sistemas de saúde.
+O FHIR (Fast Healthcare Interoperability Resources) é um padrão de interoperabilidade em saúde amplamente adotado pela comunidade médica, para facilitar a troca de informações de saúde eletrônicas entre sistemas de saúde.
 
 **Principais Características do FHIR:**
 
