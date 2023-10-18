@@ -239,7 +239,7 @@ const Practitioners = () => {
               >
                 <Card.Content>
                   <Text style={styles.practitionerName}>
-                    {practitioner.resource.name[0].given.join(" ")}{" "}
+                    {practitioner.resource.name[0].given}{" "}
                     {practitioner.resource.name[0].family}
                   </Text>
 

@@ -70,7 +70,6 @@ export const Login = ({ navigation }) => {
                 }}
                 placeholderTextColor="#fff"
                 textColor="#fff"
-                right={<TextInput.Icon iconColor="#fff" icon="account" />}
                 style={{
                   backgroundColor: "transparent",
                   marginBottom: 8,
@@ -148,7 +147,7 @@ export const Login = ({ navigation }) => {
                 style={{
                   fontFamily: "poppins-regular",
                   fontSize: 14,
-                  color: "pink",
+                  color: "white",
                 }}
               >
                 É necessário selecionar um tipo de usuário
@@ -187,7 +186,7 @@ export const Login = ({ navigation }) => {
               </Text>
               <Avatar.Icon
                 icon="chevron-right"
-                color="pink"
+                color="white"
                 backgroundColor="transparent"
                 size={48}
                 style={{ marginLeft: -12 }}
